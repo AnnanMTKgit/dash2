@@ -586,13 +586,8 @@ def Graphs_bar(df_selected):
     'staticPlot': True,  # Disable all interactive features
     'displayModeBar': False  # Hide the mode bar (but still offer the download button via Streamlit)
 }
+    return figs
     
-    # Afficher les graphiques dans des colonnes
-    c1, c2, c3 = st.columns(3)
-    plot_and_download(c1,figs[0],button_key='f1')
-    plot_and_download(c2,figs[1],button_key='f2')
-    plot_and_download(c3,figs[2],button_key='f3')
-
     
 
 def Graphs_pie(df_selected):
@@ -602,11 +597,7 @@ def Graphs_pie(df_selected):
         create_pie_chart(df_selected, 'Passée'),
         create_pie_chart(df_selected, 'Rejetée')
     ]
-    c4, c5,c6= st.columns(3)
-    plot_and_download(c4,pie[0],button_key='p1')
-    plot_and_download(c5,pie[1],button_key='p2')
-    plot_and_download(c6,pie[2],button_key='p3')
-
+    return pie
     
 
 # Plotting with Plotly
