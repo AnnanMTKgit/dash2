@@ -628,7 +628,7 @@ def plot_line_chart(df):
             xaxis=dict(title='Agent',tickfont=dict(size=10)),
             yaxis=dict(title="Nombre d'Opération"),margin=dict(l=150, r=50, t=50, b=150),
             title="Nombre d'Opération par Agent",plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor='rgba(0,0,0,0)',
-            showlegend=False,width=500,height=800
+            showlegend=False,width=500
         )
         
     
