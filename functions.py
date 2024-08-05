@@ -626,9 +626,9 @@ def plot_line_chart(df):
 
         fig.update_layout(
             xaxis=dict(title='Agent',tickfont=dict(size=10)),
-            yaxis=dict(title="Nombre d'Opération"),margin=dict(l=150, r=50, t=50, b=150),
+            yaxis=dict(title="Nombre d'Opération"),margin=dict(l=150, r=20, t=20, b=150),
             title="Nombre d'Opération par Agent",plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor='rgba(0,0,0,0)',
-            showlegend=False,width=500
+            showlegend=False,height=500
         )
         
     
@@ -670,7 +670,8 @@ def plot_line_chart(df):
             #     tickvals= aggregated_df['Date_Reservation'],
             #     ticktext=[pd.to_datetime(d).strftime('%d-%m-%y') for d in aggregated_df['date']]
             # ),
-            width=600
+            height=500
+
         )
     return fig  
 

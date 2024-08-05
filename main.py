@@ -157,7 +157,7 @@ def option2(df_selected,df_queue):
 
     elif option == "Evolution Nbr Clients":
         
-        c1,c2=st.columns([90,10])
+        c1,c2=st.columns([80,10])
         plot_and_download(c1,plot_line_chart(df_selected),button_key='9')
         
         
