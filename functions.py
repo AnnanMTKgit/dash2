@@ -186,25 +186,37 @@ def Conjection(df_queue):
         c3.markdown(legend_html, unsafe_allow_html=True)
     max_length=df['Capacites'].unique()[0]
     queue_length=current_attente(df)
+    #queue_length=0
     percentage = (queue_length / max_length) * 100
-
+    
     display_value = queue_length if queue_length <= max_length else " Capacité Atteinte"
-    bar_color = 'red' if queue_length > max_length else (
-        'green' if percentage < 50 else 'yellow' if percentage < 80 else 'red'
+    bar_color = 'red' if queue_length > max_length else ('white' if percentage ==0 else
+        'green' if percentage < 50 else 'yellow' if percentage < 80 else "orange"
     )
+    titre={"white":'Vide','green':"Modérement occupée","yellow":"Fortement occupée","orange":"Très fortement occupée ",'red':'Congestionnée'}
+    # prefix_text = (
+    # f"<span style='color:white; font-size:16px;'>"
+    # f"Client(s) en Attente: <span style='color:red;'>{queue_length}</span>"
+    # "</span>"
+#)
+
 
     fig = go.Figure(go.Indicator(
         mode = "gauge+delta",
         value = queue_length,
         number={'suffix': '' if queue_length <= max_length else display_value},
-        delta = {'reference': 0, 'increasing': {'color': bar_color}},
+        #delta = {'reference': 0, 'increasing': {'color': 'black'},'prefix': prefix_text ,'font': {'size': 24}},
+        delta={'reference': 0, 'increasing': {'color': bar_color}},
         gauge = {
             'axis': {'range': [0, max_length]},
             'bar': {'color': bar_color, 'thickness': 0.00002},  # Barre très fine
             'steps': [
+                
                 {'range': [0, 0.5 * max_length], 'color': 'green'},
                 {'range': [0.5 * max_length, 0.80 * max_length], 'color': 'yellow'},
-                {'range': [0.80 * max_length, max_length], 'color': 'red'}
+                {'range': [0.80 * max_length, max_length], 'color': "orange"},
+                
+
             ],
             'threshold': {
                 'line': {'color': "black", 'width': 4},
@@ -212,19 +224,21 @@ def Conjection(df_queue):
                 'value': queue_length
             }
         },
-        title = {'text': "Client(s) en Attente:", 'font': {'size': 24}},  # Increased font size to 24
+        title = {'text': titre[bar_color], 'font': {'size': 18, 'color': bar_color}},  # Increased font size to 24
         domain = {'x': [0, 1], 'y': [0, 1]}
     ))
     if queue_length > max_length:
         fig.update_traces(number={'valueformat': "d", 'font': {'size': 12}, 'suffix': display_value})
     fig.update_layout(
         height=400,
-        margin=dict(l=50, r=50, t=50, b=50),plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=30, r=0, t=30, b=30),plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor='rgba(0,0,0,0)',
+    xaxis_title='Client(s) en Attente',  # Ajouter le titre de l'axe des X
+    xaxis_title_font=dict(size=16, color='white'),  # Définir la taille et la couleur de la police
     )
     
     
     c1.plotly_chart(fig,use_container_width=True)
-    
+
         
         
         
