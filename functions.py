@@ -186,27 +186,27 @@ def Conjection(df_queue):
         c3.markdown(legend_html, unsafe_allow_html=True)
     max_length=df['Capacites'].unique()[0]
     queue_length=current_attente(df)
-    #queue_length=0
+
     percentage = (queue_length / max_length) * 100
     
-    display_value = queue_length if queue_length <= max_length else " Capacité Atteinte"
-    bar_color = 'red' if queue_length > max_length else ('white' if percentage ==0 else
+    display_value = queue_length if queue_length < max_length else " Capacité Atteinte"
+    bar_color = 'red' if queue_length >= max_length else ('white' if percentage ==0 else
         'green' if percentage < 50 else 'yellow' if percentage < 80 else "orange"
     )
     titre={"white":'Vide','green':"Modérement occupée","yellow":"Fortement occupée","orange":"Très fortement occupée ",'red':'Congestionnée'}
-    # prefix_text = (
-    # f"<span style='color:white; font-size:16px;'>"
-    # f"Client(s) en Attente: <span style='color:red;'>{queue_length}</span>"
-    # "</span>"
-#)
+    prefix_text = (
+    f"<span style='color:white; font-size:20px;'>"
+    f"Client(s) en Attente: <span style='color:{bar_color};'>{queue_length}</span>"
+    "</span>"
+)
 
 
     fig = go.Figure(go.Indicator(
         mode = "gauge+delta",
         value = queue_length,
         number={'suffix': '' if queue_length <= max_length else display_value},
-        #delta = {'reference': 0, 'increasing': {'color': 'black'},'prefix': prefix_text ,'font': {'size': 24}},
-        delta={'reference': 0, 'increasing': {'color': bar_color}},
+        delta = {'reference': -1, 'increasing': {'color': 'black'},'prefix': prefix_text ,'font': {'size': 24}},
+        #delta={'reference': 0, 'increasing': {'color': bar_color}},
         gauge = {
             'axis': {'range': [0, max_length]},
             'bar': {'color': bar_color, 'thickness': 0.00002},  # Barre très fine
