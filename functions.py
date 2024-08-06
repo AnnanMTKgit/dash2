@@ -166,7 +166,7 @@ def plot_and_download(col, fig, button_key):
 
 def Conjection(df_queue):
     c1,c2,c3=st.columns([30,55,15])
-    
+    legend_html, deck =create_map(df_queue)
     NomAgence = c1.selectbox(
         ':white[CONGESTION PAR AGENCE:]',
         options=df_queue['NomAgence'].unique(),
@@ -176,7 +176,7 @@ def Conjection(df_queue):
     
     df = df_queue.query('NomAgence==@NomAgence')
     
-    legend_html, deck =create_map(df_queue)
+    
     with c2:
         c2.pydeck_chart(deck)
         
