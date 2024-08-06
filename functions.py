@@ -205,7 +205,7 @@ def Conjection(df_queue):
         mode = "gauge+delta",
         value = queue_length,
         number={'suffix': '' if queue_length <= max_length else display_value},
-        delta = {'reference': -1, 'increasing': {'color': 'black'},'prefix': prefix_text ,'font': {'size': 24}},
+        delta = {'reference': -1, 'increasing': {'color': "#000000"},'prefix': prefix_text ,'font': {'size': 24}},
         #delta={'reference': 0, 'increasing': {'color': bar_color}},
         gauge = {
             'axis': {'range': [0, max_length]},
@@ -231,7 +231,7 @@ def Conjection(df_queue):
         fig.update_traces(number={'valueformat': "d", 'font': {'size': 12}, 'suffix': display_value})
     fig.update_layout(
         height=400,
-        margin=dict(l=30, r=0, t=30, b=30),plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=30, r=30, t=30, b=30),plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor='rgba(0,0,0,0)',
     xaxis_title='Client(s) en Attente',  # Ajouter le titre de l'axe des X
     xaxis_title_font=dict(size=16, color='white'),  # Définir la taille et la couleur de la police
     )
