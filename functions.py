@@ -120,6 +120,7 @@ def create_map(data):
     deck = pdk.Deck(
         initial_view_state=initial_view,
         layers=layers + [polygon_layer],
+        tooltip={"html": "<b>Name:</b> {NomAgence} <br><b>Latitude:</b> {Latitude} <br><b>Longitude:</b> {Longitude}", "style": {"color": "white"}},
         #tooltip={"text": "Lieu: {place}\nLat: {latitude}\nLon: {longitude}"},  # Afficher le nom du lieu dans le tooltip
         map_style="mapbox://styles/mapbox/satellite-streets-v11",#'mapbox://styles/mapbox/streets-v11',  # Spécifier le style de la carte
         width=500,
