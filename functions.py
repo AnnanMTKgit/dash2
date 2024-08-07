@@ -606,6 +606,9 @@ def find_highest_peak(df, person):
         df_person = df[df['UserName'] == person]
         max_row = df_person.loc[df_person['count'].idxmax()]
         return max_row['Date_Reservation']
+def find_value_peak(df, person):
+        df_person = df[df['UserName'] == person]
+        return df_person['count'].max()
 
 def plot_line_chart(df):
     if len(df['Date_Reservation'].dt.date.unique())==1:
@@ -649,18 +652,29 @@ def plot_line_chart(df):
 
         # Filtrage des dates d'abscisse pour n'afficher que les dates des pics
         peak_date_strings = [date for date in peak_dates.values()]
-        # Réorganiser les données pour l'affichage
         
-        # Ajout d'une colonne pour extraire uniquement le jour
-        #aggregated_df['Jour'] = aggregated_df['date'].dt.day.astype(str)
+        agg=aggregated_df.loc[aggregated_df.groupby('UserName')['count'].idxmax()]
+
         # Créer le graphique
+        
         fig = px.line(aggregated_df, x='Date_Reservation', y='count', color='UserName',line_group='UserName', title='Nombre d\'Opération par Agent', markers=True)
-    
         fig.update_xaxes(
-    tickmode='array',
-    tickvals=[date for date in peak_dates.values()],
-    ticktext=peak_date_strings
-)
+        tickmode='array',
+        tickvals=[date for date in peak_dates.values()],
+        ticktext=peak_date_strings
+       )  
+    
+        fig.add_trace(go.Scatter(
+            x=agg['Date_Reservation'],
+            y=agg['count'],
+            mode='text',
+            text=agg.apply(lambda row: f" {row['count']}", axis=1),
+            textposition='top center',
+            marker=dict(size=10),
+            showlegend=False
+
+        ))
+        
 
         fig.update_layout(
             xaxis_title='Date de Pick de Client par Agent',
