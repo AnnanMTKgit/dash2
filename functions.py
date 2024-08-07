@@ -620,7 +620,7 @@ def plot_line_chart(df):
             x=grouped['UserName'],
             y=grouped['count'],
             mode='lines+markers+text',
-            text=grouped.apply(lambda row: f"( {row['count']})", axis=1),
+            text=grouped.apply(lambda row: f" {row['count']}", axis=1),
             textposition='top center',
             marker=dict(size=9),
             name='Total Count'
@@ -630,7 +630,7 @@ def plot_line_chart(df):
 
         fig.update_layout(
             xaxis=dict(title='Agent',tickfont=dict(size=10)),
-            yaxis=dict(title="Nombre d'Opération"),margin=dict(l=150, r=20, t=20, b=150),
+            yaxis=dict(title="Nombre d'Opération"),margin=dict(l=150, r=20, t=30, b=150),
             title="Nombre d'Opération par Agent",plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor='rgba(0,0,0,0)',
             showlegend=False,height=500
         )
