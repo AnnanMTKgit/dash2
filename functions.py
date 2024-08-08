@@ -18,12 +18,17 @@ import copy
 ######################### Global Analysis ####################
 
 
-def current_attente(df_queue,service=None,agence=None):
+def current_attente(df_queue,service=None,agence=None,HeureFermeture=None):
     current_date = datetime.now().date()
     current_datetime = datetime.now()
 
 # Set the time to 6:00 PM on the same day
-    six_pm_datetime = current_datetime.replace(hour=18, minute=0, second=0, microsecond=0)
+    if HeureFermeture==None:
+        six_pm_datetime = current_datetime.replace(hour=18, minute=0, second=0, microsecond=0)
+    else:
+        
+        time_obj =datetime.strptime(HeureFermeture, "%H:%M").time()
+        six_pm_datetime=datetime.combine(current_date, time_obj)
 
     if current_datetime > six_pm_datetime:
         return 0
@@ -33,7 +38,7 @@ def current_attente(df_queue,service=None,agence=None):
             
             df = df_queue.query(f"(Nom==@var & Date_Reservation.dt.strftime('%Y-%m-%d') == '{current_date}')")
 
-            #df=df_queue.query(f"((Date_Appel.isnull() & Date_Fin.isnull()) or Date_Fin.isnull()) & (Date_Reservation.dt.strftime('%Y-%m-%d') == '{current_date}')")
+            
             number=len(df)
         else: 
             df=df_queue.query(f"(Nom==@var & Date_Reservation.dt.strftime('%Y-%m-%d') == '{current_date}' & NomService==@service")
@@ -73,15 +78,20 @@ def create_map(data):
         pitch=150
     )
 
-    # Extraire tous les lieux uniques de la colonne 'place'
+  # Extract unique places
     unique_places = data['NomAgence'].unique()
 
-    # Générer une palette de N couleurs en fonction du nombre de lieux uniques
-    colors = cm.tab10.colors[:len(unique_places)]  # Utilisation d'une palette de couleurs de matplotlib
+    # Get the colormap
+    colormap = cm.get_cmap('tab10')
 
-    # Créer un dictionnaire associant chaque lieu unique à une couleur de la palette
+    # Generate color indices
+    color_indices = np.linspace(0, 1, len(unique_places))
+
+    # Sample colors from the colormap
+    colors = [colormap(index) for index in color_indices]
+
+    # Create a dictionary mapping each unique place to a color
     color_scale = {place: colors[i] for i, place in enumerate(unique_places)}
-
     # Liste pour stocker les couches ColumnLayer
     layers = []
 
@@ -120,7 +130,7 @@ def create_map(data):
     deck = pdk.Deck(
         initial_view_state=initial_view,
         layers=layers + [polygon_layer],
-        tooltip={"html": "<b>Nom:</b> {NomAgence} <br><b>Latitude:</b> {Latitude} <br><b>Longitude:</b> {Longitude}", "style": {"color": "white"}},
+        tooltip={"html": "<b>Nom:</b> {NomAgence} <br><b>Capacité:</b> {Capacites} <br>", "style": {"color": "white"}}, #<b>Longitude:</b> {Longitude}
         #tooltip={"text": "Lieu: {place}\nLat: {latitude}\nLon: {longitude}"},  # Afficher le nom du lieu dans le tooltip
         map_style="mapbox://styles/mapbox/satellite-streets-v11",#'mapbox://styles/mapbox/streets-v11',  # Spécifier le style de la carte
         width=500,
@@ -143,8 +153,8 @@ def plot_and_download(col, fig, button_key):
     copied_fig = copy.deepcopy(fig)
     copied_fig.update_layout(margin=dict(l=200, r=100, t=50, b=50),
                              autosize=False,
-    width=1200,  # Set figure width
-    height=800 
+    width=640,  # Set figure width
+    height=480 
 
       # Margins in pixels
 )
@@ -176,7 +186,7 @@ def Conjection(df_queue):
     )
     
     df = df_queue.query('NomAgence==@NomAgence')
-    
+    HeureF=df['HeureFermeture'].unique()[0]
     
     with c2:
         c2.pydeck_chart(deck)
@@ -186,7 +196,7 @@ def Conjection(df_queue):
         c3.write('Legend')
         c3.markdown(legend_html, unsafe_allow_html=True)
     max_length=df['Capacites'].unique()[0]
-    queue_length=current_attente(df)
+    queue_length=current_attente(df,HeureFermeture=HeureF)
 
     percentage = (queue_length / max_length) * 100
     
@@ -523,7 +533,7 @@ def create_pie_chart(df, title):
             labels=top['LabelWithNbs'],
             values=top['Nom'],
             pull=[0.1 if i == 1 else 0 for i in range(len(top))],  # Pull out the second slice ('B')
-            marker=dict(colors=['#636EFA', '#EF553B', '#00CC96', '#AB63FA'], line=dict(color='#FFFFFF', width=2)),
+            marker=dict(colors = ['#636EFA', '#EF553B', '#00CC96', '#AB63FA','#FFA15A', '#19D3F3', '#FF6692', '#B6E880','#FF97FF', '#FECB52'], line=dict(color='#FFFFFF', width=2)),
             textinfo='percent' ,textposition= 'inside' 
         ))
         
@@ -548,32 +558,32 @@ def create_pie_chart(df, title):
     
 
 
-def ServiceTable(df_selected,df_queue):
-    df1=df_selected.copy()
+# def ServiceTable(df_selected,df_queue):
+#     df1=df_selected.copy()
    
-    agg1 = df1.groupby(['NomAgence']).agg(
-    Temps_Moyen_Operation=('TempOperation', lambda x: np.round(np.mean(x)/60)),
-    Temps_Moyen_Attente=('TempsAttenteReel', lambda x: np.round(np.mean(x)/60)),NombreTraites=('UserName',lambda x: int(sum(x.notna())))
-).reset_index()
+#     agg1 = df1.groupby(['NomAgence']).agg(
+#     Temps_Moyen_Operation=('TempOperation', lambda x: np.round(np.mean(x)/60)),
+#     Temps_Moyen_Attente=('TempsAttenteReel', lambda x: np.round(np.mean(x)/60)),NombreTraites=('UserName',lambda x: int(sum(x.notna())))
+# ).reset_index()
     
-    df2=df_queue.copy()
+#     df2=df_queue.copy()
     
-    agg2=df2.groupby(['NomAgence']).agg(NombreTickets=('Date_Reservation', np.count_nonzero),AttenteActuel=("NomAgence",lambda x: current_attente(df2,agence=x.values[0])),TotalMobile=('IsMobile',lambda x: int(sum(x)))).reset_index()
-    agg=pd.merge(agg1,agg2,on=['NomAgence'],how='left')
-    agg=agg.rename(columns={'NomAgence':"Nom d'Agence",'Temps_Moyen_Operation':"Temps Moyen d'Operation (MIN)",'Temps_Moyen_Attente':"Temps Moyen d'Attente (MIN)",'NombreTraites':'Total Traités','NombreTickets':'Total Tickets','AttenteActuel':'Nbs de Clients en Attente'})
-    agg["Period"]=f"Du {df_queue['Date_Reservation'].min().strftime('%Y-%m-%d')} à {df_queue['Date_Reservation'].max().strftime('%Y-%m-%d')}"
+#     agg2=df2.groupby(['NomAgence']).agg(NombreTickets=('Date_Reservation', np.count_nonzero),AttenteActuel=("NomAgence",lambda x: current_attente(df2,agence=x.values[0])),TotalMobile=('IsMobile',lambda x: int(sum(x)))).reset_index()
+#     agg=pd.merge(agg1,agg2,on=['NomAgence'],how='left')
+#     agg=agg.rename(columns={'NomAgence':"Nom d'Agence",'Temps_Moyen_Operation':"Temps Moyen d'Operation (MIN)",'Temps_Moyen_Attente':"Temps Moyen d'Attente (MIN)",'NombreTraites':'Total Traités','NombreTickets':'Total Tickets','AttenteActuel':'Nbs de Clients en Attente'})
+#     agg["Period"]=f"Du {df_queue['Date_Reservation'].min().strftime('%Y-%m-%d')} à {df_queue['Date_Reservation'].max().strftime('%Y-%m-%d')}"
 
-    order=['Period',"Nom d'Agence", "Temps Moyen d'Operation (MIN)", "Temps Moyen d'Attente (MIN)",'Total Tickets','Total Traités','TotalMobile','Nbs de Clients en Attente']
-    agg=agg[order]
+#     order=['Period',"Nom d'Agence", "Temps Moyen d'Operation (MIN)", "Temps Moyen d'Attente (MIN)",'Total Tickets','Total Traités','TotalMobile','Nbs de Clients en Attente']
+#     agg=agg[order]
     
-    return agg
+#     return agg
 
-def HomeFilter(df_selected,df_queue):
+# def HomeFilter(df_selected,df_queue):
     
-    agg=ServiceTable(df_selected,df_queue)
+#     agg=ServiceTable(df_selected,df_queue)
     
         
-    return agg
+    # return agg
 def Graphs_bar(df_selected):
     
     
@@ -680,11 +690,7 @@ def plot_line_chart(df):
             xaxis_title='Date de Pick de Client par Agent',
             yaxis_title='Nombre d\'Opérations',
             xaxis_tickangle=-45,plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor='rgba(0,0,0,0)',
-            # xaxis=dict(
-            #     tickmode='array',
-            #     tickvals= aggregated_df['Date_Reservation'],
-            #     ticktext=[pd.to_datetime(d).strftime('%d-%m-%y') for d in aggregated_df['date']]
-            # ),
+           
             height=500
 
         )
