@@ -28,7 +28,7 @@ connection_string = (
 
 
 
-@st.cache_data(hash_funcs={pyodbc.Connection: id})
+@st.cache_data(hash_funcs={pyodbc.Connection: id}, show_spinner=False)
 def get_sqlData_cache(start_date, end_date):
    
     sql=f""" SELECT u.FirstName,u.LastName,u.UserName,q.Date_Reservation,q.Date_Appel,q.TempAttenteMoyen,DATEDIFF(second, q.Date_Reservation, q.Date_Appel) as TempsAttenteReel,
