@@ -216,7 +216,7 @@ def Conjection(df_queue):
         mode = "gauge+delta",
         value = queue_length,
         number={'suffix': '' if queue_length <= max_length else display_value},
-        delta = {'reference': -1, 'increasing': {'color': "#000000"},'prefix': prefix_text ,'font': {'size': 24}},
+        delta = {'reference': -1, 'increasing': {'color': "black"},'prefix': prefix_text ,'font': {'size': 24}},
         #delta={'reference': 0, 'increasing': {'color': bar_color}},
         gauge = {
             'axis': {'range': [0, max_length]},
