@@ -1,8 +1,6 @@
 [theme]
-base="dark"
-backgroundColor="black"  # Black background
-textColor="#FFFFFF"  # White text
-font="sans serif"
-
-#[server]
-#numThreads = 8
+primaryColor = "#1E1E1E"
+backgroundColor = "#000000"  # Dark background
+secondaryBackgroundColor = "#2E2E2E"
+textColor = "#E0E0E0"  # Light gray text color
+font = "sans serif"

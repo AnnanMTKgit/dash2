@@ -197,7 +197,7 @@ def Conjection(df_queue):
         c3.markdown(legend_html, unsafe_allow_html=True)
     max_length=df['Capacites'].unique()[0]
     queue_length=current_attente(df,HeureFermeture=HeureF)
-
+    
     percentage = (queue_length / max_length) * 100
     
     display_value = queue_length if queue_length < max_length else " Capacité Atteinte"

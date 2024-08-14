@@ -13,69 +13,25 @@ st.markdown('###')
 st.sidebar.image('logo.png',caption="",width=150)
 
 
-# @st.cache_data
-# def get_img_as_base64(file):
-#     with open(file, "rb") as f:
-#         data = f.read()
-#     return base64.b64encode(data).decode()
+st.markdown("""
+    <style>
+    @media (prefers-color-scheme: dark) {
+        /* Dark mode styles */
+        body {
+            color: #E0E0E0;  /* Light gray text for dark theme */
+            background-color: #000000;
+        }
+    }
 
-
-# img = get_img_as_base64('background.jpg')
-
-# page_bg_img = f"""
-# <style>
-# [data-testid="stAppViewContainer"] > .main {{
-# #background-image: url('https://img.freepik.com/free-photo/dark-abstract-background_1048-1920.jpg?w=1800&t=st=1718946607~exp=1718947207~hmac=a4db4d36500b426a9916d8c86209d586bd1a763a69a3224a713594b9e16a8708');
-# background-color: black;
-# background-size: 100%;
-# background-position: top left;
-# background-repeat: no-repeat;
-# background-attachment: local;
-# }}
-
-# [data-testid="stSidebar"] > div:first-child {{
-# background: black;
-# background-image: url("data:image/png;base64,{img}");
-# background-position: center; 
-# background-repeat: no-repeat;
-# background-attachment: fixed;
-# }}
-
-# [data-testid="stHeader"] {{
-# background: rgba(0,0,0,0);
-# }}
-
-# [data-testid="stToolbar"] {{
-# right: 2rem;
-# }}
-# </style>
-# """
-
-# st.markdown(page_bg_img, unsafe_allow_html=True)
-
-# Custom CSS for the sidebar background image
-
-
-# Custom CSS
-# st.markdown("""
-# <style>
-#     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-#     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
-#     @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap');
-
-#     body {
-#         font-family: 'Roboto', sans-serif;
-#     }
-#     h1, h2, h3, h4, h5, h6 {
-#         font-family: 'Montserrat', sans-serif;
-#     }
-#     code, pre {
-#         font-family: 'Source Code Pro', monospace;
-#     }
-# </style>
-# """, unsafe_allow_html=True)
-
-
+    @media (prefers-color-scheme: light) {
+        /* Light mode styles */
+        body {
+            color: #000000;  /* Dark text for light theme */
+            background-color: #FFFFFF;
+        }
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 #st.title("")
 st.sidebar.header("Configuration")
