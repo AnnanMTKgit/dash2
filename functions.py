@@ -305,29 +305,29 @@ def HomeGlob(df_all,df_queue):
 
 def Top10_Type(df_queue):
     df=df_queue.copy()
-    df['TypeOperationId'] = df['TypeOperationId'].apply(lambda x: 0 if pd.isnull(x) else x)
-    mapping={0:'Inconnu',1: 'Retrait_Espèce',2: 'Retrait_Chèque',3: 'Gros_Retrait',4: 'Retrait_carte',5: 'Demande_Chequier',6: 'Paiement_Frais_Visa_USA',7: 'Gros_Versement',8: 'Versement',9: 'Autre_dépôt',10: 'CGF_Bourse',11: 'Ciment_Sahel',12: ' Dangote',13: 'FT 2',14: 'Hapag_Lloyd',15: 'MSC',16: 'Total_Energies',17: 'Achat_devises',18: 'Vent_ devises',19: 'Moneygram',20: 'Rapid_Transfert',21: 'RIA',22: 'Transfast',23: 'Western_Union',24: 'Autr_ transfert'}
-    df['TypeOperationId'] = df['TypeOperationId'].apply(lambda x: mapping[x])
-    top_counts = df['TypeOperationId'].value_counts().reset_index()
-    top_counts=top_counts.sort_values(by='TypeOperationId', ascending=False)
+    df['Type_Operation'] = df['Type_Operation'].apply(lambda x: 'Inconnu' if pd.isnull(x) else x)
+
+    
+    top_counts = df['Type_Operation'].value_counts().reset_index()
+    top_counts=top_counts.sort_values(by='Type_Operation', ascending=False)
     top_counts=top_counts.head(10)
     top_counts = top_counts.iloc[::-1]
     
     
     fig = go.Figure()
     if top_counts.empty==False:
-        valmax=top_counts['TypeOperationId'].max()
+        valmax=top_counts['Type_Operation'].max()
         
-        dfmax=top_counts[top_counts['TypeOperationId'].apply(lambda x:(x>=100) and (valmax-x<=100))]
+        dfmax=top_counts[top_counts['Type_Operation'].apply(lambda x:(x>=100) and (valmax-x<=100))]
     
-        dfmin=top_counts[top_counts['TypeOperationId'].apply(lambda x:(x<100) or (valmax-x>100))]
+        dfmin=top_counts[top_counts['Type_Operation'].apply(lambda x:(x<100) or (valmax-x>100))]
     # Ajouter les barres pour les valeurs < 100
         
         # Ajouter les barres pour les valeurs >= 100
-        fig.add_trace(go.Bar(go.Bar(x=dfmin['TypeOperationId'], y=dfmin['index'],orientation='h',text=dfmin['TypeOperationId'],
+        fig.add_trace(go.Bar(go.Bar(x=dfmin['Type_Operation'], y=dfmin['index'],orientation='h',text=dfmin['Type_Operation'],
         textposition='outside',showlegend=False,textfont=dict(color='white'),marker=dict(color='green'))
         ))
-        fig.add_trace(go.Bar(go.Bar(x=dfmax['TypeOperationId'], y=dfmax['index'],orientation='h',text=dfmax['TypeOperationId'],
+        fig.add_trace(go.Bar(go.Bar(x=dfmax['Type_Operation'], y=dfmax['index'],orientation='h',text=dfmax['Type_Operation'],
         textposition='inside',showlegend=False,textfont=dict(color='white'),marker=dict(color='green'))
         ))
 
@@ -376,26 +376,25 @@ def Top10_Type_op(df_selection,df_all):
     df=df_all.copy()
     NomService=list(df_selection['NomService'].values)
     df=df[df['NomService'].isin(NomService)]
-    df['TypeOperationId'] = df['TypeOperationId'].apply(lambda x: 0 if pd.isnull(x) else x)
-    mapping={0:'Inconnu',1: 'Retrait_Espèce',2: 'Retrait_Chèque',3: 'Gros_Retrait',4: 'Retrait_carte',5: 'Demande_Chequier',6: 'Paiement_Frais_Visa_USA',7: 'Gros_Versement',8: 'Versement',9: 'Autre_dépôt',10: 'CGF_Bourse',11: 'Ciment_Sahel',12: ' Dangote',13: 'FT 2',14: 'Hapag_Lloyd',15: 'MSC',16: 'Total_Energies',17: 'Achat_devises',18: 'Vent_ devises',19: 'Moneygram',20: 'Rapid_Transfert',21: 'RIA',22: 'Transfast',23: 'Western_Union',24: 'Autr_ transfert'}
-    df['TypeOperationId'] = df['TypeOperationId'].apply(lambda x: mapping[x])
-    top_counts = df['TypeOperationId'].value_counts().reset_index()
-    top_counts=top_counts.sort_values(by='TypeOperationId', ascending=False)
+    df['Type_Operation'] = df['Type_Operation'].apply(lambda x: 'Inconnu' if pd.isnull(x) else x)
+  
+    top_counts = df['Type_Operation'].value_counts().reset_index()
+    top_counts=top_counts.sort_values(by='Type_Operation', ascending=False)
     top_counts=top_counts.head(10)
     top_counts = top_counts.iloc[::-1]
    
     fig = go.Figure()
     if top_counts.empty==False:
-        valmax=top_counts['TypeOperationId'].max()
+        valmax=top_counts['Type_Operation'].max()
         
-        dfmax=top_counts[top_counts['TypeOperationId'].apply(lambda x:(x>=100) and (valmax-x<=100))]
+        dfmax=top_counts[top_counts['Type_Operation'].apply(lambda x:(x>=100) and (valmax-x<=100))]
     
-        dfmin=top_counts[top_counts['TypeOperationId'].apply(lambda x:(x<100) or (valmax-x>100))]
+        dfmin=top_counts[top_counts['Type_Operation'].apply(lambda x:(x<100) or (valmax-x>100))]
     
-        fig.add_trace(go.Bar(go.Bar(x=dfmin['TypeOperationId'], y=dfmin['index'],orientation='h',text=dfmin['TypeOperationId'],
+        fig.add_trace(go.Bar(go.Bar(x=dfmin['Type_Operation'], y=dfmin['index'],orientation='h',text=dfmin['Type_Operation'],
         textposition='outside',showlegend=False,marker=dict(color='#0083b8'))
         ))
-        fig.add_trace(go.Bar(go.Bar(x=dfmax['TypeOperationId'], y=dfmax['index'],orientation='h',text=dfmax['TypeOperationId'],
+        fig.add_trace(go.Bar(go.Bar(x=dfmax['Type_Operation'], y=dfmax['index'],orientation='h',text=dfmax['Type_Operation'],
         textposition='inside',showlegend=False,marker=dict(color='#0083b8'))
         ))
 
@@ -409,10 +408,9 @@ def TempsParType_op(df_selection,df_all):
     df=df_all.copy()
     NomService=list(df_selection['NomService'].values)
     df=df[df['NomService'].isin(NomService)]
-    df['TypeOperationId'] = df['TypeOperationId'].apply(lambda x: 0 if pd.isnull(x) else x)
-    mapping={0:'Inconnu',1: 'Retrait_Espèce',2: 'Retrait_Chèque',3: 'Gros_Retrait',4: 'Retrait_carte',5: 'Demande_Chequier',6: 'Paiement_Frais_Visa_USA',7: 'Gros_Versement',8: 'Versement',9: 'Autre_dépôt',10: 'CGF_Bourse',11: 'Ciment_Sahel',12: ' Dangote',13: 'FT 2',14: 'Hapag_Lloyd',15: 'MSC',16: 'Total_Energies',17: 'Achat_devises',18: 'Vent_ devises',19: 'Moneygram',20: 'Rapid_Transfert',21: 'RIA',22: 'Transfast',23: 'Western_Union',24: 'Autr_ transfert'}
-    df['TypeOperationId'] = df['TypeOperationId'].apply(lambda x: mapping[x])
-    top_counts =df.groupby('TypeOperationId').agg(TempOperation=('TempOperation', lambda x:  np.round(np.mean(x)/60))).reset_index()
+    df['Type_Operation'] = df['Type_Operation'].apply(lambda x: 'Inconnu' if pd.isnull(x) else x)
+
+    top_counts =df.groupby('Type_Operation').agg(TempOperation=('TempOperation', lambda x:  np.round(np.mean(x)/60))).reset_index()
     top_counts=top_counts.sort_values(by='TempOperation', ascending=False)
     
     top_counts = top_counts.iloc[::-1]
@@ -425,10 +423,10 @@ def TempsParType_op(df_selection,df_all):
     
         dfmin=top_counts[top_counts['TempOperation'].apply(lambda x:(x<100) or (valmax-x>100))]
     
-        fig.add_trace(go.Bar(go.Bar(x=dfmin['TempOperation'], y=dfmin['TypeOperationId'],orientation='h',text=dfmin['TempOperation'],
+        fig.add_trace(go.Bar(go.Bar(x=dfmin['TempOperation'], y=dfmin['Type_Operation'],orientation='h',text=dfmin['TempOperation'],
         textposition='outside',showlegend=False,marker=dict(color='#0083b8'))
         ))
-        fig.add_trace(go.Bar(go.Bar(x=dfmax['TempOperation'], y=dfmax['TypeOperationId'],orientation='h',text=dfmax['TempOperation'],
+        fig.add_trace(go.Bar(go.Bar(x=dfmax['TempOperation'], y=dfmax['Type_Operation'],orientation='h',text=dfmax['TempOperation'],
         textposition='inside',showlegend=False,marker=dict(color='#0083b8'))
         ))
 
