@@ -6,9 +6,7 @@ import seaborn as sns
 from functions import *
 import base64
 st.set_page_config(page_title='Dashboard',page_icon='📊',layout='wide')
-st.subheader('Bienvenu sur le Tableau de Bord de Marlodj 🇸🇳')
-st.markdown('###')
-
+st.sidebar.subheader('Bienvenu sur le Tableau de Bord de Marlodj 🇸🇳')
        
 st.sidebar.image('logo.png',caption="",width=150)
 
@@ -38,27 +36,9 @@ st.sidebar.header("Configuration")
 
 
 def option1(df_all,df_queue):
-    st.subheader("GFA Global")
     
-    
-
-
-
-
-
-    pages = ['Congestion et localisation','Tableau Global', "Temps Moyen & Top10 d'Opération", 'Top5 Agences Plus Lentes',"Top5 Agences les plus Fréquentées"]
+    pages = ['Congestion et localisation','Tableau Global','Agence & Queue' ,"Temps Moyen & Type d'Opération", 'Agences Plus Lentes',"Agences les plus Fréquentées"]
     option=st.radio(label=' ',options=pages,horizontal=True)
-
-
-    
-    # # Configure the figure to be static
-    # config = {
-    # 'staticPlot': True,  # Disable all interactive features
-    # 'scrollZoom': False,  # Disable scroll zooming
-    # 'displayModeBar': False  # Hide the mode bar
-    # }
-
-    
 
     # Afficher le contenu en fonction de la sélection
     if option == 'Congestion et localisation':
@@ -68,21 +48,31 @@ def option1(df_all,df_queue):
     elif option =='Tableau Global':
         
         HomeGlob(df_all,df_queue)
-
-    elif option == "Temps Moyen & Top10 d'Opération":
+    elif option=='Agence & Queue':
+        chart1=stacked_chart(df_all,'TempsAttenteReel','NomAgence',"Catégorisation du Temps d'Attente")
+        st.altair_chart(chart1)
+        chart2=stacked_chart(df_all,'TempOperation','NomAgence',"Catégorisation du Temps d'Opération")
+        st.altair_chart(chart2)
+    elif option == "Temps Moyen & Type d'Opération":
         c1,c2=st.columns(2)
         
         plot_and_download(c1,GraphsGlob(df_all),'1')
         
+        chart=stacked_service(df_all,type='NomService',concern='Type_Operation')
+        c1.altair_chart(chart)
+        
         plot_and_download(c2,Top10_Type(df_queue),'2')
 
 
-    elif option == 'Top5 Agences Plus Lentes':
-        c1,c2=st.columns(2)
-        plot_and_download(c1,Top5Agence(df_all,df_queue,"Temps Moyen d'Operation (MIN)",'Temps en minutes'),button_key='3')
-        plot_and_download(c2,Top5Agence(df_all,df_queue,"Temps Moyen d'Attente (MIN)",'Temps en minutes'),button_key='4')
-        
-    elif option == "Top5 Agences les plus Fréquentées":
+    elif option == 'Agences Plus Lentes':
+        c1,c2=st.columns([80,20])
+        titre1="Top5 Agences les Plus Lentes en Temps d'Attente"
+        c1.plotly_chart(area_graph(df_all,concern='NomAgence',time='TempsAttenteReel',date_to_bin='Date_Appel',seuil=15,title=titre1))
+        c3,c4=st.columns([80,20])
+        titre2="Top5 Agences les Plus Lentes en Temps de d'Operation"
+        c3.plotly_chart(area_graph(df_all,concern='NomAgence',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title=titre2))
+    elif option == "Agences les plus Fréquentées":
+        st.subheader("Top5 Agences les plus Fréquentées")
         c1,c2=st.columns(2)
         
         plot_and_download(c1,Top5Agence(df_all,df_queue,'Total Tickets','Nombre de Clients'),button_key='5')
@@ -98,7 +88,7 @@ def option2(df_selected,df_queue):
     
     
 
-    pages = ['Top10 & Temps Moyen (Opération)',"Evolution Nbr Clients", "Performance Agents en Nbr de Clients", "Performance Agents en Temps"]
+    pages = ['Top10 & Temps Moyen (Opération)','Agents & Queue',"Evolution Nbr Clients", "Performance Agents en Nbr de Clients", "Performance Agents en Temps"]
     
     option=st.radio(label=' ',options=pages,horizontal=True)
     
@@ -109,7 +99,9 @@ def option2(df_selected,df_queue):
         plot_and_download(c1,Top10_Type_op(df_selected,df_all),button_key='7')
         plot_and_download(c2,TempsParType_op(df_selected,df_all),button_key='8')
         
-        
+    elif option== 'Agents & Queue':
+        fig=stacked_chart(df_selected,'TempOperation','UserName',"Catégorisation du Temps d'opération")
+        st.altair_chart(fig)    
 
     elif option == "Evolution Nbr Clients":
         
@@ -133,8 +125,7 @@ def option2(df_selected,df_queue):
         plot_and_download(c2,figs[1],button_key='f2')
         plot_and_download(c3,figs[2],button_key='f3')
 
-        
-
+    
 start_date, end_date=date_range_selection()
 
 current_date = datetime.now().date()
@@ -160,6 +151,7 @@ if len(df)==0:
     st.warning("C'est peut être le Week-End ou un jour non ouvrable pour la banque")
     st.stop()
 else:
+    df=generate_agence(df,20)
     NomAgence=st.sidebar.multiselect(
         'Agences',
         options=df['NomAgence'].unique(),
@@ -169,6 +161,7 @@ else:
     if df.empty:
         st.warning('Aucune Agence Sélectionnée')
         st.stop()
+    
     df_all = df[df['UserName'].notna()].reset_index(drop=True)
     df_queue=df.copy()
     if df_queue.empty or df_all.empty:

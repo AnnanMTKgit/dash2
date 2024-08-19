@@ -15,8 +15,200 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import plotly.io as pio
 import copy
+import altair as alt
 ######################### Global Analysis ####################
 
+def stacked_chart(data,type:str,concern:str,titre):
+    """
+    Default values of type:
+    'TempsAttenteReel' and 'TempOperation'
+    """
+    df=data.copy()
+    df=df.sample(n=min(5000, len(data)),replace=False)
+    df[type] = df[type].dropna()
+    
+    df['Categorie'] = df[type].apply(lambda x: 
+    '0-5min' if 0 <= np.round(x/60).astype(int) <= 5 else 
+    '5-10min' if 5 < np.round(x/60).astype(int) <= 10 else 
+    '>10min'
+)
+    df=df.groupby([f'{concern}', 'Categorie']).size().reset_index(name='Count')
+    if concern=='UserName':
+        x='Agent(s)'
+    else:
+        x='Agence(s)'
+    
+    chart = alt.Chart(df).mark_bar().encode(
+        x=alt.X(f'{concern}:O', title=f'{x}'),
+        y=alt.Y('Count:Q', title='Nombre par Categorie'),
+        color=alt.Color('Categorie:N', title='Categories'),
+        order=alt.Order('Categorie:N')  # Ensures the stacking order
+    ).properties(
+        width=1000,
+        height=400,
+        title=f"{titre} par {x}"
+    )
+    return chart
+
+def stacked_service(data,type:str,concern:str,titre="Nombre de type d'opération par Service"):
+    """
+    Default values of type:
+    'TempsAttenteReel' and 'TempOperation'
+    """
+    df=data.copy()
+    df=df.sample(n=min(5000, len(data)),replace=False)
+    df[concern] = df[concern].apply(lambda x: 'Inconnu' if pd.isnull(x) else x)
+    
+    df=df.groupby([f'{type}', f'{concern}']).size().reset_index(name='Count')
+    
+    chart = alt.Chart(df).mark_bar().encode(
+        x=alt.X(f'{type}:O', title='Service'),
+        y=alt.Y('Count:Q', title='Nombre par Categorie'),
+        color=alt.Color(f'{concern}:N', title="Type d'Opération"),
+        order=alt.Order(f'{concern}:N')  # Ensures the stacking order
+    ).properties(
+        width=1000,
+        height=400,
+        title=f"{titre}"
+    )
+    return chart
+
+def generate_agence(df,num_new_agencies):
+
+    rows_per_agency = int(len(df)/num_new_agencies)
+
+    new_agencies = [f'Agence_{i+1}' for i in range(num_new_agencies)]
+
+    # Update the 'NomAgence' column with new agency names in blocks of 500 rows
+    for i, agency in enumerate(new_agencies):
+        start_index = i * rows_per_agency
+        end_index = start_index + rows_per_agency
+        df.loc[start_index:end_index, 'NomAgence'] = agency
+        df.loc[start_index:end_index, 'UserName'] = df['UserName'].apply(lambda x: f"{x}_{i+1}" if pd.notna(x) else x)
+        df.loc[start_index:end_index, 'Longitude'] = df.loc[start_index:end_index, 'Longitude'] + (0.01 * (i+1))
+        df.loc[start_index:end_index, 'Latitude'] = df.loc[start_index:end_index, 'Latitude'] + (0.01 * (i+1))
+    return df 
+
+
+def assign_to_bin(date,bins):
+    date = pd.Timestamp(date).normalize()  # Convert string date to Timestamp and normalize (ignore time)
+    for start, end in bins:
+        start_date = pd.Timestamp(start).normalize()
+        end_date = pd.Timestamp(end).normalize()
+        if start_date <= date <= end_date:
+            return f"{start_date.date()} to {end_date.date()}"
+    return None   
+def get_time_bins(min_date, max_date, bin_type):
+    start_date = min_date
+    time_bins = []
+
+    if bin_type == 'Mois':
+        offset = pd.DateOffset(months=1)
+    elif bin_type == 'Semaine':
+        offset = pd.DateOffset(weeks=1)
+    elif bin_type == 'Annee':
+        offset = pd.DateOffset(years=1)
+    else:
+        raise ValueError("bin_type must be 'month', 'week', or 'year'")
+
+    while start_date <= max_date:
+        if bin_type == 'Semaine':
+            end_date = start_date + pd.DateOffset(days=6)
+        else:
+            end_date = (start_date + offset) - pd.DateOffset(days=1)
+
+        # Ensure the end date does not exceed the max_date
+        if end_date > max_date:
+            end_date = max_date
+
+        time_bins.append((start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')))
+
+        # Move to the next bin
+        start_date = end_date + pd.DateOffset(days=1)
+
+    return time_bins
+
+def area_graph(data,concern='UserName',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title='Courbe'):
+    df=data.copy()
+    df=df.dropna(subset=[date_to_bin])
+
+    # Convert columns to datetime
+    df['Date_Reservation'] = pd.to_datetime(df['Date_Reservation'])
+    df[date_to_bin] = pd.to_datetime(df[date_to_bin])
+
+
+    # Calculate the difference between the min and max dates
+    min_date = df['Date_Reservation'].min()
+    max_date = df['Date_Reservation'].max()
+    date_diff = (max_date - min_date).days
+
+    # Define the Time_Bin intervals based on the date difference
+    if date_diff == 0:
+        unit, df['Time_Bin'] = 'Heure', pd.cut(df[date_to_bin].dt.hour, bins=range(7, 19), labels=[f'{i}-{i+1}am' for i in range(7, 12)] + [f'{i-12}-{i-11}pm' for i in range(12, 18)], right=False)
+    elif 1 <= date_diff <=7:
+        unit, df['Time_Bin'], complete_dates = 'Jour', df[date_to_bin].dt.day, range(min_date.day, max_date.day + 1)
+    else:
+        unit = ['Semaine', 'Mois', 'Annee'][int(date_diff > 84) + int(date_diff > 365)]
+        bins = get_time_bins(min_date, max_date, unit)
+        df['Time_Bin'] = df[date_to_bin].apply(lambda x: assign_to_bin(x, bins))
+
+
+    # Group by Nom_Agence and Time_Bin, and calculate the average TempAttente
+    grouped_data = df.groupby([concern, 'Time_Bin'])[[time]].agg(( lambda x: np.round(np.mean(x)/60).astype(int))).reset_index()
+
+    # Select the top 5 agencies with the largest area under the curve
+    if len(df['NomAgence'].unique())==1 and concern=='UserName':
+        top_agences=grouped_data[concern].unique()
+    else:
+        top_agences =grouped_data.groupby(concern)[time].sum().nlargest(5).index.tolist()
+    
+
+
+    # Create a DataFrame with all combinations of agencies and time bins
+    if unit=="Jour":
+        all_combinations = pd.MultiIndex.from_product([top_agences, sorted(complete_dates)], names=[concern, 'Time_Bin']).to_frame(index=False)
+    else:
+        
+        all_combinations = pd.MultiIndex.from_product([top_agences, sorted(df['Time_Bin'].dropna().unique())], names=[concern, 'Time_Bin']).to_frame(index=False)
+
+    all_combinations = pd.merge(all_combinations, grouped_data, on=[concern, 'Time_Bin'], how='left').fillna(0)
+
+
+    # Create a figure with go.Figure
+    fig = go.Figure()
+
+    # Add traces for each agency
+    for agence in top_agences:
+        agency_data = all_combinations[all_combinations[concern] == agence]
+        fig.add_trace(go.Scatter(
+            x=agency_data['Time_Bin'],
+            y=agency_data[time],
+            mode='lines+markers',
+            fill='tozeroy',
+            name=agence,
+            showlegend=True
+        ))
+
+    # Update layout for better visualization
+    fig.update_layout(
+        title=title,
+        xaxis_title=f'Intervalle de Temps en {unit}',
+        yaxis_title='Temp Moyen (minutes)',
+        template='plotly_dark',
+        legend_title=concern,width=1000
+    )
+    # Ajouter une ligne horizontale avec une couleur différente des courbes
+    fig.add_shape(
+        type="line",
+        x0=all_combinations['Time_Bin'].min(),  # Début de la ligne sur l'axe x
+        x1=all_combinations['Time_Bin'].max(),  # Fin de la ligne sur l'axe x
+        y0=seuil,  # Position de la ligne sur l'axe y
+        y1=seuil,  # Même que y0 pour que la ligne soit horizontale
+        line=dict(color="yellow", width=2, dash="dot")  # Couleur différente (ici, noir)
+    )
+    
+    # Display the chart in Streamlit
+    return fig
 
 def current_attente(df_queue,service=None,agence=None,HeureFermeture=None):
     current_date = datetime.now().date()
@@ -102,7 +294,7 @@ def create_map(data):
             'ColumnLayer',
             data=data[data['NomAgence'] == place],
             get_position='[Longitude, Latitude]',
-            get_elevation=100,  # Hauteur fixe pour tous les bâtiments
+            get_elevation=200,  # Hauteur fixe pour tous les bâtiments
             elevation_scale=10,
             get_fill_color=color_rgb,  # Utilisation de la couleur RGB
             radius=50,
@@ -259,7 +451,7 @@ def Conjection(df_queue):
 def GraphsGlob(df_all):
     
 
-    df=(df_all.groupby(by=['NomService']).mean()['TempOperation']/60).astype(int).reset_index()
+    df = (df_all.groupby(by=['NomService']).mean()['TempOperation'] / 60).dropna().astype(int).reset_index()
     
 
     fig_tempOp_1 = go.Figure()
@@ -297,8 +489,26 @@ def AgenceTable(df_all,df_queue):
 def HomeGlob(df_all,df_queue):
     agg=AgenceTable(df_all,df_queue)
     cmap = plt.cm.get_cmap('RdYlGn')
-    st.dataframe(agg.style.background_gradient(cmap=cmap,vmin=(-0.015),vmax=0.015,axis=None))
-    #st.write(agg.style.background_gradient(cmap=cmap,vmin=(-0.015),vmax=0.015,axis=None).to_html(), unsafe_allow_html=True)
+    capacite=agg['Nbs de Clients en Attente'].values[0]
+    
+    def tmo_col(val):
+        color = 'background-color: red' if val >= 5 else ''
+        return color
+    def tma_col(val):
+        color = 'background-color: orange' if val > 15 else ''
+        return color
+    
+    def nbs_col(val):
+        color = 'background-color: orange' if val > capacite else ''
+        return color
+    
+
+    agg=agg.style.background_gradient(cmap=cmap,vmin=(-0.015),vmax=0.015,axis=None)
+    
+    agg=agg.applymap(tmo_col, subset=["Temps Moyen d'Operation (MIN)"])
+    agg=agg.applymap(tma_col, subset=["Temps Moyen d'Attente (MIN)"])
+    agg=agg.applymap(nbs_col, subset=['Nbs de Clients en Attente'])
+    st.dataframe(agg)
     
     
 
