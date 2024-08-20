@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import plotly.io as pio
 import copy
 import altair as alt
+import seaborn as sns
 ######################### Global Analysis ####################
 
 def stacked_chart(data,type:str,concern:str,titre):
@@ -288,24 +289,24 @@ def create_map(data):
 
   # Extract unique places
     unique_places = data['NomAgence'].unique()
-
+    
     # Get the colormap
-    colormap = cm.get_cmap('tab10')
+    # colormap = cm.get_cmap('tab20')
+    # color_indices = np.linspace(0, 1, len(unique_places))
+    # colors = [colormap(index) for index in color_indices]
 
-    # Generate color indices
-    color_indices = np.linspace(0, 1, len(unique_places))
-
-    # Sample colors from the colormap
-    colors = [colormap(index) for index in color_indices]
-
+    colors = []
+    colors.extend(sns.color_palette('tab20', 20))
+    colors.extend(sns.color_palette('pastel', len(unique_places) - 20))
     # Create a dictionary mapping each unique place to a color
     color_scale = {place: colors[i] for i, place in enumerate(unique_places)}
     # Liste pour stocker les couches ColumnLayer
     layers = []
-
+    
     # Ajouter une couche ColumnLayer pour chaque lieu avec sa couleur correspondante
     for place in unique_places:
         color_rgb = [int(c * 255) for c in color_scale[place]]  # Conversion RGB pour PyDeck
+        
         layer = pdk.Layer(
             'ColumnLayer',
             data=data[data['NomAgence'] == place],
@@ -322,7 +323,7 @@ def create_map(data):
 
         # Ajouter à la légende HTML
         legend_html += f'<div><span style="color:rgb({", ".join(map(str, color_rgb))});">&#9632;</span> {place}</div>'
-
+    
     # Définir la couche du polygone pour couvrir la zone
     polygon_layer = pdk.Layer(
         'PolygonLayer',
