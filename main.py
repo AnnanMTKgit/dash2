@@ -15,9 +15,9 @@ st.sidebar.markdown(
     """,
     unsafe_allow_html=True
 )     
-c1,c2,c3=st.sidebar.columns([20,50,30])
+
 # Display the image in the main area
-c2.image('logo.png', caption="", width=150)
+st.sidebar.image('logo.png', caption="", width=150)
 
 # Custom CSS to make the button red
 

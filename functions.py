@@ -344,7 +344,7 @@ def create_map(data):
         width=500,
         height=100
     )
-    st.write(data['Latitude'].values[0],data['Longitude'].values[0])
+
     # Retourner la légende HTML
     return legend_html, deck
 
