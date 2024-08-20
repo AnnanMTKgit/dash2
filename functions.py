@@ -75,20 +75,34 @@ def stacked_service(data,type:str,concern:str,titre="Nombre de type d'opération
 
 
 
-def generate_agence(df,num_new_agencies):
+def generate_agence(df):
 
-    rows_per_agency = int(len(df)/num_new_agencies)
+    
 
-    new_agencies = [f'Agence_{i+1}' for i in range(num_new_agencies)]
+    #new_agencies = [f'Agence_{i+1}' for i in range(num_new_agencies)]
+    d={'Agence Ecobank Ngor':[14.754164, -17.506642],'Ecobank Yoff':[14.759643, -17.467951],
 
+    'Ecobank Sacré Coeur':[14.723065, -17.469012],'ECOBANK Maristes':[14.745871, -17.430285],
+
+    'Ecobank Agence Ouakam':[14.724443, -17.487083],'Ecobank de Tilène':[14.683164, -17.446533],
+
+    'Ecobank':[14.724788, -17.442350],'Ecobank Keur Massar':[14.781027, -17.319195],'ECOBANK':[14.708073, -17.437760],
+
+    'Ecobank HLM':[14.713197, -17.444832],'Ecobank Sénégal':[14.704719, -17.470716],'Ecobank Plateau':[14.672557, -17.432282],
+
+    'EcoBank Sicap':[14.712269, -17.460110],'Ecobank Domaine industriel':[14.725120, -17.442350]
+
+    }
+    rows_per_agency = int(len(df)/len(d.keys()))
     # Update the 'NomAgence' column with new agency names in blocks of 500 rows
-    for i, agency in enumerate(new_agencies):
+    for i,agency in enumerate(d.keys()):
         start_index = i * rows_per_agency
         end_index = start_index + rows_per_agency
+        lat,long=d[agency]
         df.loc[start_index:end_index, 'NomAgence'] = agency
         df.loc[start_index:end_index, 'UserName'] = df['UserName'].apply(lambda x: f"{x}_{i+1}" if pd.notna(x) else x)
-        df.loc[start_index:end_index, 'Longitude'] = df.loc[start_index:end_index, 'Longitude'] + (0.01 * (i+1))
-        df.loc[start_index:end_index, 'Latitude'] = df.loc[start_index:end_index, 'Latitude'] + (0.01 * (i+1))
+        df.loc[start_index:end_index, 'Longitude'] = long
+        df.loc[start_index:end_index, 'Latitude'] =lat
     return df 
 
 
@@ -324,13 +338,13 @@ def create_map(data):
     deck = pdk.Deck(
         initial_view_state=initial_view,
         layers=layers + [polygon_layer],
-        tooltip={"html": "<b>Nom:</b> {NomAgence} <br><b>Capacité:</b> {Capacites} <br>", "style": {"color": "white"}}, #<b>Longitude:</b> {Longitude}
-        #tooltip={"text": "Lieu: {place}\nLat: {latitude}\nLon: {longitude}"},  # Afficher le nom du lieu dans le tooltip
+        #tooltip={"html": "<b>Nom:</b> {NomAgence} <br><b>Capacité:</b> {Capacites} <br>", "style": {"color": "white"}}, #<b>Longitude:</b> {Longitude}
+        tooltip={"text": "Lieu: {NomAgence}\nLat: {Latitude}\nLon: {Longitude}"},  # Afficher le nom du lieu dans le tooltip
         map_style="mapbox://styles/mapbox/satellite-streets-v11",#'mapbox://styles/mapbox/streets-v11',  # Spécifier le style de la carte
         width=500,
         height=100
     )
-
+    st.write(data['Latitude'].values[0],data['Longitude'].values[0])
     # Retourner la légende HTML
     return legend_html, deck
 
