@@ -8,3 +8,4 @@ pydeck==0.8.1b
 pyodbc==5.1.0
 streamlit-option-menu==0.3.13
 kaleido==0.2.1
+altair==4.2.2
