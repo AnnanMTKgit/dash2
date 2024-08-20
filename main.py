@@ -6,33 +6,42 @@ import seaborn as sns
 from functions import *
 import base64
 st.set_page_config(page_title='Dashboard',page_icon='📊',layout='wide')
-st.sidebar.subheader('Bienvenu sur le Tableau de Bord de Marlodj 🇸🇳')
-       
-st.sidebar.image('logo.png',caption="",width=150)
+#st.sidebar.subheader('Bienvenu sur le Tableau de Bord de Marlodj 🇸🇳')
+st.sidebar.markdown(
+    """
+    <div style="text-align: center;">
+        <h2>Bienvenu sur le Tableau de Bord de Marlodj 🇸🇳</h2>
+    </div>
+    """,
+    unsafe_allow_html=True
+)     
+
+# Display the image in the main area
+st.sidebar.image('logo.png', caption="", width=150)
+
+# Custom CSS to make the button red
 
 
-st.markdown("""
-    <style>
-    @media (prefers-color-scheme: dark) {
-        /* Dark mode styles */
-        body {
-            color: #E0E0E0;  /* Light gray text for dark theme */
-            background-color: #000000;
-        }
-    }
+# st.markdown("""
+#     <style>
+#     @media (prefers-color-scheme: dark) {
+#         /* Dark mode styles */
+#         body {
+#             color: #E0E0E0;  /* Light gray text for dark theme */
+#             background-color: #000000;
+#         }
+#     }
 
-    @media (prefers-color-scheme: light) {
-        /* Light mode styles */
-        body {
-            color: #000000;  /* Dark text for light theme */
-            background-color: #FFFFFF;
-        }
-    }
-    </style>
-""", unsafe_allow_html=True)
+#     @media (prefers-color-scheme: light) {
+#         /* Light mode styles */
+#         body {
+#             color: #000000;  /* Dark text for light theme */
+#             background-color: #FFFFFF;
+#         }
+#     }
+#     </style>
+# """, unsafe_allow_html=True)
 
-#st.title("")
-st.sidebar.header("Configuration")
 
 
 def option1(df_all,df_queue):
@@ -102,7 +111,8 @@ def option2(df_selected,df_queue):
     elif option== 'Agents & Queue':
         fig=stacked_chart(df_selected,'TempOperation','UserName',"Catégorisation du Temps d'opération")
         st.altair_chart(fig)    
-
+        fig1=stacked_agent(df_selected,type='UserName',concern='Type_Operation')
+        st.altair_chart(fig1)
     elif option == "Evolution Nbr Clients":
         
         c1,c2=st.columns([80,10])
@@ -171,7 +181,7 @@ else:
         st.session_state['selected_option'] = "GFA Global"
     with st.sidebar:
         selected=option_menu(
-            menu_title="Menu Principal",
+            menu_title="",
             options=["GFA Global","Filtre"],
             icons=["globe","list-task"],
             menu_icon="cast",

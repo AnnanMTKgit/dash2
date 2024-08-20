@@ -41,7 +41,7 @@ def stacked_chart(data,type:str,concern:str,titre):
     chart = alt.Chart(df).mark_bar().encode(
         x=alt.X(f'{concern}:O', title=f'{x}'),
         y=alt.Y('Count:Q', title='Nombre par Categorie'),
-        color=alt.Color('Categorie:N', title='Categories'),
+        color=alt.Color('Categorie:N', title='Queue'),
         order=alt.Order('Categorie:N')  # Ensures the stacking order
     ).properties(
         width=1000,
@@ -72,6 +72,8 @@ def stacked_service(data,type:str,concern:str,titre="Nombre de type d'opération
         title=f"{titre}"
     )
     return chart
+
+
 
 def generate_agence(df,num_new_agencies):
 
@@ -581,6 +583,30 @@ def Top5Agence(df_all,df_queue,title,text):
 
 
 ######################## Analysis with filter ###################
+
+def stacked_agent(data,type:str,concern:str,titre="Nombre de type d'opération par Agent"):
+    """
+    Default values of type:
+    'TempsAttenteReel' and 'TempOperation'
+    """
+    df=data.copy()
+    df=df.sample(n=min(5000, len(data)),replace=False)
+    df[concern] = df[concern].apply(lambda x: 'Inconnu' if pd.isnull(x) else x)
+    
+    df=df.groupby([f'{type}', f'{concern}']).size().reset_index(name='Count')
+    
+    chart = alt.Chart(df).mark_bar().encode(
+        x=alt.X(f'{type}:O', title='Agent(s)'),
+        y=alt.Y('Count:Q', title='Nombre par Categorie'),
+        color=alt.Color(f'{concern}:N', title="Type d'Opération"),
+        order=alt.Order(f'{concern}:N')  # Ensures the stacking order
+    ).properties(
+        width=1000,
+        height=400,
+        title=f"{titre}"
+    )
+    return chart
+
 
 def Top10_Type_op(df_selection,df_all):
     df=df_all.copy()

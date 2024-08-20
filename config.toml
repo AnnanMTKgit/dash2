@@ -1,6 +1,6 @@
 [theme]
 base="dark"
-backgroundColor="black"  # Black background
+backgroundColor="#000000"  # Black background
 textColor="#FFFFFF"  # White text
 font="sans serif"
 
