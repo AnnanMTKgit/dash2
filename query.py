@@ -2,14 +2,16 @@ import pyodbc
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
+import os
 
-# Define the connection parameters
-server = 'marlodj-ecobank-db-server.database.windows.net'
-database = 'MarlodjCore'
-username = 'marlodj-admin'
-password = 'tR0i48L658jQ'
-driver = '{ODBC Driver 17 for SQL Server}'
-#MARS_Connection='yes'
+server = os.getenv('DB_SERVER')
+database = os.getenv('DB_DATABASE')
+username = os.getenv('DB_USERNAME')
+password = os.getenv('DB_PASSWORD')
+driver = os.getenv('DB_DRIVER')
+
+
+
 # Create the connection string
 connection_string = (
     f'DRIVER={driver};'
