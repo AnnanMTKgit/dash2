@@ -1,6 +1,13 @@
 # Jupyter Notebook
 .ipynb_checkpoints
 
+#files 
+/text.ipynb
+/location.txt
+
+# Ignore Python cache files
+__pycache__/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 
