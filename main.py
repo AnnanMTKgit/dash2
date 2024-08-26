@@ -6,11 +6,11 @@ import seaborn as sns
 from functions import *
 import base64
 st.set_page_config(page_title='Dashboard',page_icon='📊',layout='wide')
-#st.sidebar.subheader('Bienvenu sur le Tableau de Bord de Marlodj 🇸🇳')
+#st.sidebar.subheader('BienTableau de Bord de Marlodj 🇸🇳')
 st.sidebar.markdown(
     """
-    <div style="text-align: center;">
-        <h2>Bienvenu sur le Tableau de Bord de Marlodj 🇸🇳</h2>
+    <div style="text-align: center; font-size: 20px;">
+        <h1>Tableau de Bord de Marlodj 🇸🇳</h1>
     </div>
     """,
     unsafe_allow_html=True
