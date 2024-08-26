@@ -1,0 +1,8 @@
+[theme]
+base="dark"
+backgroundColor="#1C1C1C"  # Black background
+textColor="black"  # White text
+font="sans serif"
+
+#[server]
+#numThreads = 8
