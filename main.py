@@ -97,7 +97,7 @@ def option1(df_all,df_queue):
 def option2(df_selected,df_queue):
     liste = list(df_selected['NomService'].unique())
     services_str = '-'.join(liste)
-    st.markdown(f"""Service(s) : {services_str}""")
+    st.markdown(f'## Service(s) : {services_str}')
 
   
 
@@ -169,7 +169,7 @@ if len(df)==0:
     st.warning("C'est peut être le Week-End ou un jour non ouvrable pour la banque")
     st.stop()
 else:
-    df=generate_agence(df)
+    #df=generate_agence(df)
     NomAgence=st.sidebar.multiselect(
         'Agences',
         options=df['NomAgence'].unique(),
