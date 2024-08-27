@@ -176,10 +176,20 @@ def stacked_service(data,type:str,concern:str,titre="Nombre de type d'opération
     
     df=df.groupby([f'{type}', f'{concern}']).size().reset_index(name='Count')
     
+    n=len(df[concern].unique())
+    top_categories = df.groupby(concern)['Count'].sum().nlargest(n).index.tolist()
+
+
+
+
+
+
+
     chart = alt.Chart(df).mark_bar().encode(
         x=alt.X(f'{type}:O', title='Service'),
         y=alt.Y('Count:Q', title='Nombre par Categorie'),
-        color=alt.Color(f'{concern}:N', title="Type d'Opération"),
+        color=alt.Color(f'{concern}:N', title="Type d'Opération" ,sort=top_categories   # Apply specific colors to the top three categories
+        ),
         order=alt.Order(f'{concern}:N', title="Type d'Opération")  # Ensures the stacking order
     ).properties(
         width=700,
@@ -762,7 +772,7 @@ def stacked_agent(data,type:str,concern:str,titre="Nombre de type d'opération p
     chart = alt.Chart(df).mark_bar().encode(
         x=alt.X(f'{type}:O', title='Agent(s)'),
         y=alt.Y('Count:Q', title='Nombre par Categorie'),
-        color=alt.Color(f'{concern}:N', title="Type d'Opération"),
+        color=alt.Color(f'{concern}:N', title="Type d'Opération",sort=['#0083b8','blue','#FFC0CB','yellow','red']),
         order=alt.Order(f'{concern}:N', title="Type d'Opération")  # Ensures the stacking order
     ).properties(
         width=1000,
