@@ -176,7 +176,7 @@ def stacked_service(data,type:str,concern:str,titre="Nombre de type d'opération
     
     df=df.groupby([f'{type}', f'{concern}']).size().reset_index(name='Count')
     
-    n=len(df[concern].unique())
+    n=len(df[concern].unique()) 
     top_categories = df.groupby(concern)['Count'].sum().nlargest(n).index.tolist()
 
 
@@ -365,10 +365,10 @@ def area_graph(data,concern='UserName',time='TempOperation',date_to_bin='Date_Fi
     # Display the chart in Streamlit
     return fig
 
-def current_attente(df_queue,service=None,agence=None,HeureFermeture=None):
+def current_attente(df_queue,agence=None,HeureFermeture=None):
     current_date = datetime.now().date()
     current_datetime = datetime.now()
-
+   
 # Set the time to 6:00 PM on the same day
     if HeureFermeture==None:
         six_pm_datetime = current_datetime.replace(hour=18, minute=0, second=0, microsecond=0)
@@ -381,22 +381,27 @@ def current_attente(df_queue,service=None,agence=None,HeureFermeture=None):
         return 0
     else:
         var='En attente'
-        if service==None:
+        if agence==None:
             
-            df = df_queue.query(f"(Nom==@var & Date_Reservation.dt.strftime('%Y-%m-%d') == '{current_date}')")
+            df = df_queue.query(
+            f"(Nom == @var) & (Date_Reservation.dt.strftime('%Y-%m-%d') == '{current_date}')"
+        )
 
             
             number=len(df)
         else: 
-            df=df_queue.query(f"(Nom==@var & Date_Reservation.dt.strftime('%Y-%m-%d') == '{current_date}' & NomService==@service")
+            df = df_queue.query(
+            f"(Nom == @var) & (Date_Reservation.dt.strftime('%Y-%m-%d') == '{current_date}') & (NomAgence == @agence)"
+        )
             number=len(df)
         return number
 
 
 
-def create_map(data):
+def create_map(agg):
     legend_html = ''  # Variable pour stocker la légende HTML
-    
+    data=agg.copy()
+    data['Temps_Moyen_Attente']=data['Temps_Moyen_Attente'].fillna(' ')
     # Calcul de la bounding box
     min_lat = data['Latitude'].min()
     max_lat = data['Latitude'].max()
@@ -449,7 +454,7 @@ def create_map(data):
             'ColumnLayer',
             data=data[data['NomAgence'] == place],
             get_position='[Longitude, Latitude]',
-            get_elevation=200,  # Hauteur fixe pour tous les bâtiments
+            get_elevation=100,  # Hauteur fixe pour tous les bâtiments
             elevation_scale=10,
             get_fill_color=color_rgb,  # Utilisation de la couleur RGB
             radius=50,
@@ -478,9 +483,9 @@ def create_map(data):
         initial_view_state=initial_view,
         layers=layers + [polygon_layer],
         #tooltip={"html": "<b>Nom:</b> {NomAgence} <br><b>Capacité:</b> {Capacites} <br>", "style": {"color": "white"}}, #<b>Longitude:</b> {Longitude}
-        tooltip={"text": "Lieu: {NomAgence}\nLat: {Latitude}\nLon: {Longitude}"},  # Afficher le nom du lieu dans le tooltip
-        map_style="mapbox://styles/mapbox/satellite-streets-v11",#'mapbox://styles/mapbox/streets-v11',  # Spécifier le style de la carte
-        width=500,
+        tooltip={"text": "Lieu: {NomAgence}\nClient en Attente: {AttenteActuel}\nTemps Attente Moyen: {Temps_Moyen_Attente}min"},  # Afficher le nom du lieu dans le tooltip
+        map_style='mapbox://styles/mapbox/streets-v11',#"mapbox://styles/mapbox/satellite-streets-v11",#'mapbox://styles/mapbox/streets-v11',  # Spécifier le style de la carte
+        width=600,
         height=100
     )
 
@@ -522,9 +527,11 @@ def plot_and_download(col, fig, button_key):
 
 
 
-def Conjection(df_queue):
+def Conjection(df_all,df_queue):
     c1,c2,c3=st.columns([30,55,15])
-    legend_html, deck =create_map(df_queue)
+    agg = AgenceTable(df_all,df_queue)
+    agg=agg.rename(columns={"Nom d'Agence":'NomAgence','Capacité':'Capacites',"Temps Moyen d'Operation (MIN)":'Temps_Moyen_Operation',"Temps Moyen d'Attente (MIN)":'Temps_Moyen_Attente','Total Traités':'NombreTraites','Total Tickets':'NombreTickets','Nbs de Clients en Attente':'AttenteActuel'})
+    legend_html, deck =create_map(agg)
     NomAgence = c1.selectbox(
         ':white[CONGESTION PAR AGENCE:]',
         options=df_queue['NomAgence'].unique(),
@@ -532,9 +539,9 @@ def Conjection(df_queue):
         key='2'
     )
     
-    df = df_queue.query('NomAgence==@NomAgence')
-    HeureF=df['HeureFermeture'].unique()[0]
     
+    # HeureF=df['HeureFermeture'].unique()[0]
+    df=agg[agg['NomAgence']==NomAgence]
     with c2:
         c2.pydeck_chart(deck)
         
@@ -542,8 +549,8 @@ def Conjection(df_queue):
     with c3:
         c3.write('Legend')
         c3.markdown(legend_html, unsafe_allow_html=True)
-    max_length=df['Capacites'].unique()[0]
-    queue_length=current_attente(df,HeureFermeture=HeureF)
+    max_length=df['Capacites'].values[0]
+    queue_length=df['AttenteActuel'].values[0]
     
     percentage = (queue_length / max_length) * 100
     
@@ -639,11 +646,13 @@ def AgenceTable(df_all,df_queue):
 ).reset_index()
     
     df2=df_queue.copy()
-    agg2=df2.groupby(['NomAgence', 'Capacites']).agg(NombreTickets=('Date_Reservation', np.count_nonzero),AttenteActuel=("NomAgence",lambda x: current_attente(df2,agence=x.values[0])),TotalMobile=('IsMobile',lambda x: int(sum(x)))).reset_index()
-    agg=pd.merge(agg1,agg2,on=['NomAgence', 'Capacites'],how='left')
+    
+    agg2=df2.groupby(['NomAgence', 'Capacites','Longitude','Latitude']).agg(NombreTickets=('Date_Reservation', np.count_nonzero),AttenteActuel=("NomAgence",lambda x: current_attente(df2,agence=x.iloc[0],HeureFermeture=df2[df2['NomAgence']==x.iloc[0]]['HeureFermeture'].values[0])),TotalMobile=('IsMobile',lambda x: int(sum(x)))).reset_index()
+    
+    agg=pd.merge(agg2,agg1,on=['NomAgence', 'Capacites'],how='outer')
     agg=agg.rename(columns={'NomAgence':"Nom d'Agence",'Capacites':'Capacité','Temps_Moyen_Operation':"Temps Moyen d'Operation (MIN)",'Temps_Moyen_Attente':"Temps Moyen d'Attente (MIN)",'NombreTraites':'Total Traités','NombreTickets':'Total Tickets','AttenteActuel':'Nbs de Clients en Attente'})
     agg["Period"]=f"Du {df_queue['Date_Reservation'].min().strftime('%Y-%m-%d')} à {df_queue['Date_Reservation'].max().strftime('%Y-%m-%d')}"
-    order=['Period',"Nom d'Agence", "Temps Moyen d'Operation (MIN)", "Temps Moyen d'Attente (MIN)",'Capacité','Total Tickets','Total Traités','TotalMobile','Nbs de Clients en Attente']
+    order=['Period',"Nom d'Agence", "Temps Moyen d'Operation (MIN)", "Temps Moyen d'Attente (MIN)",'Capacité','Total Tickets','Total Traités','TotalMobile','Nbs de Clients en Attente','Longitude','Latitude']
     agg=agg[order]
     
     return agg
@@ -657,7 +666,7 @@ def HomeGlob(df_all,df_queue):
         color = 'background-color: #0083b8' if val >= 5 else ''
         return color
     def tma_col(val):
-        color = 'background-color: blue' if val > 15 else ''
+        color = 'background-color: #1876C9' if val > 15 else ''
         return color
     
     # def nbs_col(val):

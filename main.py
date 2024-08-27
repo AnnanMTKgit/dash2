@@ -52,7 +52,7 @@ def option1(df_all,df_queue):
     # Afficher le contenu en fonction de la sélection
     if option == 'Congestion et localisation':
         
-        Conjection(df_queue)
+        Conjection(df_all,df_queue)
 
     elif option =='Tableau Global':
         
