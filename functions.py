@@ -125,14 +125,14 @@ def stacked_chart(data,type:str,concern:str,titre):
         # ).reset_index(name=type)
         #top_operations = top_operations.sort_values([f'{concern}', 'Categorie', type], ascending=[True, True, False])
 
-        top_operations = df.groupby(['UserName', 'Categorie', 'Type_Operation', 'TempOperation']).size().reset_index(name='OperationCount')
-        top_operations = top_operations.sort_values(['UserName', 'Categorie', 'TempOperation'], ascending=[True, True, False])
+        top_operations = df.groupby(['UserName', 'Categorie', 'Type_Operation', type]).size().reset_index(name='OperationCount')
+        top_operations = top_operations.sort_values(['UserName', 'Categorie', type], ascending=[True, True, False])
         top_operations = top_operations.groupby([f'{concern}', 'Categorie']).head(5)
         
 
         # Combine the TypeOperation, TempOperation, and OperationCount into a single string for tooltips
         top_operations['TopOperations'] = top_operations.apply(
-    lambda row: f"{row['Type_Operation']} ({row['TempOperation']} min, {row['OperationCount']} fois)", axis=1
+    lambda row: f"{row['Type_Operation']} ({row[type]} min, {row['OperationCount']} fois)", axis=1
 )
         top_operations = top_operations.groupby([f'{concern}', 'Categorie'])['TopOperations'].apply(lambda x: ', '.join(x)).reset_index()
         #top_operations = top_operations.groupby(['UserName', 'Categorie'])['TopOperations'].apply(lambda x: '\n'.join(x)).reset_index()
