@@ -85,7 +85,7 @@ def stacked_chart(data,type:str,concern:str,titre):
         
         chart = alt.Chart(df).mark_bar().encode(
             x=alt.X(f'{concern}:O', title=f'{x}'),
-            y=alt.Y('Count:Q', title='Nombre par Categorie'),
+            y=alt.Y('Count:Q', title='Nombre'),
             color=alt.Color('Categorie:N', title='Queue'),
             order=alt.Order('Categorie:N',title='Queue')  # Ensures the stacking order
         ).properties(
