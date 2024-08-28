@@ -68,12 +68,13 @@ def stacked_chart(data,type:str,concern:str,titre):
     """
     df=data.copy()
     df=df.sample(n=min(5000, len(data)),replace=False)
-    df[type] = df[type].dropna()
+    df = df.dropna(subset=[type])
     if concern=='UserName':
         x='Agent(s)'
     else:
         x='Agence(s)'
     if type=='TempsAttenteReel' or concern=='NomAgence':
+        
         df['Categorie'] = df[type].apply(lambda x: 
         '0-5min' if 0 <= np.round(x/60).astype(int) <= 5 else 
         '5-10min' if 5 < np.round(x/60).astype(int) <= 10 else 
@@ -101,7 +102,7 @@ def stacked_chart(data,type:str,concern:str,titre):
             
         )
     else:
-        df[type] = df[type].dropna()
+        
         df['Type_Operation'] = df['Type_Operation'].fillna('Inconnu')
         # Ensure Categorie is correctly assigned based on TempOperation (in minutes)
         df[type] = df[type].apply(lambda x: np.round(x / 60).astype(int))
@@ -113,7 +114,7 @@ def stacked_chart(data,type:str,concern:str,titre):
             '>10min'
         )
   
-       
+        
 
 
         # Group by UserName and Categorie, count the occurrences
@@ -135,11 +136,13 @@ def stacked_chart(data,type:str,concern:str,titre):
     lambda row: f"{row['Type_Operation']} ({row[type]} min, {row['OperationCount']} fois)", axis=1
 )
         top_operations = top_operations.groupby([f'{concern}', 'Categorie'])['TopOperations'].apply(lambda x: ', '.join(x)).reset_index()
+       
         #top_operations = top_operations.groupby(['UserName', 'Categorie'])['TopOperations'].apply(lambda x: '\n'.join(x)).reset_index()
         # Merge the top operations back with the count dataframe
         df_final = pd.merge(df_count, top_operations, on=[f'{concern}', 'Categorie'], how='left')
         #st.dataframe(df_final)
         # Create the Altair chart with tooltips
+
         chart = alt.Chart(df_final).mark_bar().encode(
             x=alt.X(f'{concern}:O', title=f'{x}'),
             y=alt.Y('Count:Q', title='Nombre par Categorie'),
