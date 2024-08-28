@@ -298,8 +298,8 @@ def area_graph(data,concern='UserName',time='TempOperation',date_to_bin='Date_Fi
 
     # Define the Time_Bin intervals based on the date difference
     if date_diff == 0:
-        time_bin_labels = ['7-8am', '8-9am', '9-10am', '10-11am', '11-12am', 
-                           '12-1pm', '1-2pm', '2-3pm', '3-4pm', '4-5pm', '5-6pm']
+        time_bin_labels = ['7-8h', '8-9h', '9-10h', '10-11h', '11-12h', 
+                           '12-13h', '13-14h', '14-15h', '15-16h', '16-17h', '17-18h']
         unit, df['Time_Bin'] = 'Heure', pd.cut(df[date_to_bin].dt.hour, bins=range(7, 19), labels=time_bin_labels, right=False)
         df['Time_Bin'] = pd.Categorical(df['Time_Bin'], categories=time_bin_labels, ordered=True)
     elif 1 <= date_diff <=7:
