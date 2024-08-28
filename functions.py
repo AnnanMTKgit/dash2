@@ -136,8 +136,11 @@ def stacked_chart(data,type:str,concern:str,titre):
     lambda row: f"{row['Type_Operation']} ({row[type]} min, {row['OperationCount']} fois)", axis=1
 )
         top_operations = top_operations.groupby([f'{concern}', 'Categorie'])['TopOperations'].apply(lambda x: ', '.join(x)).reset_index()
-       
-        #top_operations = top_operations.groupby(['UserName', 'Categorie'])['TopOperations'].apply(lambda x: '\n'.join(x)).reset_index()
+        #top_operations = top_operations.groupby([f'{concern}', 'Categorie'])['TopOperations'].apply(lambda x: '\n'.join(x)).reset_index()
+        #top_operations = top_operations.groupby([f'{concern}', 'Categorie'])['TopOperations'].apply(lambda x: '\n'.join([f"({op}, {count} fois)" for op, count in x.value_counts().items()])).reset_index()
+
+        #st.table(top_operations)
+        
         # Merge the top operations back with the count dataframe
         df_final = pd.merge(df_count, top_operations, on=[f'{concern}', 'Categorie'], how='left')
         #st.dataframe(df_final)
@@ -295,7 +298,10 @@ def area_graph(data,concern='UserName',time='TempOperation',date_to_bin='Date_Fi
 
     # Define the Time_Bin intervals based on the date difference
     if date_diff == 0:
-        unit, df['Time_Bin'] = 'Heure', pd.cut(df[date_to_bin].dt.hour, bins=range(7, 19), labels=[f'{i}-{i+1}am' for i in range(7, 12)] + [f'{i-12}-{i-11}pm' for i in range(12, 18)], right=False)
+        time_bin_labels = ['7-8am', '8-9am', '9-10am', '10-11am', '11-12am', 
+                           '12-1pm', '1-2pm', '2-3pm', '3-4pm', '4-5pm', '5-6pm']
+        unit, df['Time_Bin'] = 'Heure', pd.cut(df[date_to_bin].dt.hour, bins=range(7, 19), labels=time_bin_labels, right=False)
+        df['Time_Bin'] = pd.Categorical(df['Time_Bin'], categories=time_bin_labels, ordered=True)
     elif 1 <= date_diff <=7:
         unit, df['Time_Bin'], complete_dates = 'Jour', df[date_to_bin].dt.day, range(min_date.day, max_date.day + 1)
     else:
@@ -323,14 +329,17 @@ def area_graph(data,concern='UserName',time='TempOperation',date_to_bin='Date_Fi
         all_combinations = pd.MultiIndex.from_product([top_agences, sorted(df['Time_Bin'].dropna().unique())], names=[concern, 'Time_Bin']).to_frame(index=False)
 
     all_combinations = pd.merge(all_combinations, grouped_data, on=[concern, 'Time_Bin'], how='left').fillna(0)
-
-
+    
+    
+   
     # Create a figure with go.Figure
     fig = go.Figure()
 
     # Add traces for each agency
     for agence in top_agences:
         agency_data = all_combinations[all_combinations[concern] == agence]
+        if unit=='Heure':
+            agency_data = agency_data.sort_values(by='Time_Bin', key=lambda x: pd.Categorical(x, categories=time_bin_labels, ordered=True))
         fig.add_trace(go.Scatter(
             x=agency_data['Time_Bin'],
             y=agency_data[time],
@@ -339,7 +348,7 @@ def area_graph(data,concern='UserName',time='TempOperation',date_to_bin='Date_Fi
             name=agence,
             showlegend=True
         ))
-
+    
     # Update layout for better visualization
     fig.update_layout(
         title={
@@ -353,13 +362,24 @@ def area_graph(data,concern='UserName',time='TempOperation',date_to_bin='Date_Fi
         xaxis_title=f'Intervalle de Temps en {unit}',
         yaxis_title='Temp Moyen (minutes)',
         template='plotly_dark',
-        legend_title=concern,width=1000
+        legend_title=concern,width=1000,
+         xaxis=dict(
+            tickvals=all_combinations['Time_Bin'].unique()  # Only show unique Time_Bin values present in agency_data
+        )
+
     )
     # Ajouter une ligne horizontale avec une couleur différente des courbes
+    
+    if unit=="Heure":
+        h=all_combinations.sort_values(by='Time_Bin', key=lambda x: pd.Categorical(x, categories=time_bin_labels, ordered=True))
+        h=list(h['Time_Bin'].unique())
+        a,b=h[0],h[-1]
+    else:
+        a,b=all_combinations['Time_Bin'].min(),all_combinations['Time_Bin'].max()
     fig.add_shape(
         type="line",
-        x0=all_combinations['Time_Bin'].min(),  # Début de la ligne sur l'axe x
-        x1=all_combinations['Time_Bin'].max(),  # Fin de la ligne sur l'axe x
+        x0=a,  # Début de la ligne sur l'axe x
+        x1=b,  # Fin de la ligne sur l'axe x
         y0=seuil,  # Position de la ligne sur l'axe y
         y1=seuil,  # Même que y0 pour que la ligne soit horizontale
         line=dict(color="yellow", width=2, dash="dot")  # Couleur différente (ici, noir)
