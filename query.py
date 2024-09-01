@@ -4,17 +4,12 @@ import streamlit as st
 from datetime import datetime, timedelta
 import os
 
-#server = os.getenv('DB_SERVER')
-#database = os.getenv('DB_DATABASE')
-#username = os.getenv('DB_USERNAME')
-#password = os.getenv('DB_PASSWORD')
-#driver = os.getenv('DB_DRIVER')
+server = st.secrets['db_server']
+database = st.secrets['db_database']
+username = st.secrets['db_username']
+password = st.secrets['db_password']
+driver = st.secrets['db_driver']
 
-server = 'marlodj-ecobank-db-server.database.windows.net'
-database = 'MarlodjCore'
-username = 'marlodj-admin'
-password = 'tR0i48L658jQ'
-driver = '{ODBC Driver 17 for SQL Server}'
 
 
 # Create the connection string

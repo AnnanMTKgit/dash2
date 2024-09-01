@@ -45,26 +45,32 @@ st.sidebar.image('logo.png', caption="", width=150)
 
 
 def option1(df_all,df_queue):
-    
-    pages = ['Congestion et localisation','Tableau Global','Agence & Queue' ,"Temps Moyen & Type d'Opération", 'Agences Plus Lentes',"Agences Plus Fréquentées"]
+    page1='***Congestion et localisation***'
+    page2='***Tableau Global***'
+    page3='***Agence & Queue***'
+    page4="***Temps Moyen & Type d'Opération***"
+    page5='***Agences Plus Lentes***'
+    page6="***Agences Plus Fréquentées***"
+
+    pages = [page1,page2,page3,page4,page5 ,page6]
     option=st.radio(label=' ',options=pages,horizontal=True)
 
     # Afficher le contenu en fonction de la sélection
-    if option == 'Congestion et localisation':
+    if option == page1:
         
         Conjection(df_all,df_queue)
 
-    elif option =='Tableau Global':
+    elif option ==page2:
         
         HomeGlob(df_all,df_queue)
-    elif option=='Agence & Queue':
+    elif option==page3:
         chart1=stacked_chart(df_all,'TempsAttenteReel','NomAgence',"Catégorisation du Temps d'Attente")
         st.altair_chart(chart1)
         chart2=stacked_chart(df_all,'TempOperation','NomAgence',"Catégorisation du Temps d'Opération")
         st.altair_chart(chart2)
         chart3=TempsPassage(df_all)
         st.altair_chart(chart3)
-    elif option == "Temps Moyen & Type d'Opération":
+    elif option == page4:
         c1,c2=st.columns(2)
         
         plot_and_download(c1,GraphsGlob(df_all),'1')
@@ -75,14 +81,14 @@ def option1(df_all,df_queue):
         plot_and_download(c2,Top10_Type(df_queue),'2')
 
 
-    elif option == 'Agences Plus Lentes':
+    elif option == page5:
         c1,c2=st.columns([80,20])
         titre1="Top5 Agences les Plus Lentes en Temps d'Attente"
         c1.plotly_chart(area_graph(df_all,concern='NomAgence',time='TempsAttenteReel',date_to_bin='Date_Appel',seuil=15,title=titre1))
         c3,c4=st.columns([80,20])
         titre2="Top5 Agences les Plus Lentes en Temps de d'Operation"
         c3.plotly_chart(area_graph(df_all,concern='NomAgence',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title=titre2))
-    elif option == "Agences Plus Fréquentées":
+    elif option == page6:
         #st.subheader("Top5 Agences les plus Fréquentées")
         st.markdown(f"<h2 style='color:white; font-size:20px;text-align:center;'>Top5 Agences les plus Fréquentées</h2>", unsafe_allow_html=True)
         c1,c2=st.columns(2)
@@ -104,38 +110,46 @@ def option2(df_selected,df_queue):
 
     st.markdown('---')
     
+    page1='***Top10 & Temps Moyen (Opération)***'
+    page2='***Agents & Queue***'
+    page3='***Evolution Nbr Clients***'
+    page4="***Performance Agents en Nbr de Clients***"
+    page5='***Performance Agents en Temps***'
 
-    pages = ['Top10 & Temps Moyen (Opération)','Agents & Queue',"Evolution Nbr Clients", "Performance Agents en Nbr de Clients", "Performance Agents en Temps"]
+
+
+    pages = [page1,page2,page3,page4,page5]
+    # Injecter du CSS personnalisé
     
     option=st.radio(label=' ',options=pages,horizontal=True)
     
     
-    if option == 'Top10 & Temps Moyen (Opération)':
+    if option == page1:
         
         c1,c2=st.columns(2)
         plot_and_download(c1,Top10_Type_op(df_selected,df_all),button_key='7')
         plot_and_download(c2,TempsParType_op(df_selected,df_all),button_key='8')
         
-    elif option== 'Agents & Queue':
+    elif option== page2:
         fig=stacked_chart(df_selected,'TempOperation','UserName',"Catégorisation du Temps d'opération")
         st.altair_chart(fig)    
         fig1=stacked_agent(df_selected,type='UserName',concern='Type_Operation')
         st.altair_chart(fig1)
-    elif option == "Evolution Nbr Clients":
+    elif option == page3:
         
         c1,c2=st.columns([80,10])
         plot_and_download(c1,plot_line_chart(df_selected),button_key='9')
         
         
     
-    elif option == "Performance Agents en Nbr de Clients":
+    elif option == page4:
         pie=Graphs_pie(df_selected)
         c4, c5,c6= st.columns([30,30,30])
         plot_and_download(c4,pie[0],button_key='p1')
         plot_and_download(c5,pie[1],button_key='p2')
         plot_and_download(c6,pie[2],button_key='p3')
 
-    elif option == "Performance Agents en Temps":
+    elif option == page5:
         figs=Graphs_bar(df_selected)
         # Afficher les graphiques dans des colonnes
         c1, c2, c3 = st.columns([30,30,30])
