@@ -716,10 +716,7 @@ def HomeGlob(df_all,df_queue):
 
 
     agg=agg[['Période',"Nom d'Agence", "Temps Moyen d'Operation (MIN)", "Temps Moyen d'Attente (MIN)","Temps Moyen de Passage(MIN)",'Capacité','Total Tickets','Total Traités','TotalMobile','Nbs de Clients en Attente']]
-    agg=agg.style.set_table_styles({
-    'column_name': [{'selector': 'th', 'props': [('color', 'white')]}]
-})
-    agg=agg.applymap(tmo_col, subset=["Temps Moyen d'Operation (MIN)"])
+    agg=agg.style.applymap(tmo_col, subset=["Temps Moyen d'Operation (MIN)"])
     agg=agg.applymap(tma_col, subset=["Temps Moyen d'Attente (MIN)"])
     #agg=agg.applymap(nbs_col, subset=['Nbs de Clients en Attente'])
     st.dataframe(agg)
