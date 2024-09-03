@@ -47,13 +47,42 @@ st.sidebar.image('logo.png', caption="", width=150)
 def option1(df_all,df_queue):
     page1='***Congestion et localisation***'
     page2='***Tableau Global***'
-    page3='***Agence & Queue***'
+    page3='***Agences & Queue***'
     page4="***Temps Moyen & Type d'Opération***"
     page5='***Agences Plus Lentes***'
     page6="***Agences Plus Fréquentées***"
-
-    pages = [page1,page2,page3,page4,page5 ,page6]
+    page7="***Supervision des Agences***"
+    pages = [page1,page2,page3,page4,page5 ,page6,page7]
+    st.markdown(
+    """
+    <style>
+    /* Style général pour les labels */
+    div[role='radiogroup'] {
+        display: flex;
+        flex-direction: row;  /* Disposer les labels horizontalement */
+        flex-wrap: nowrap;    /* Empêcher le retour à la ligne */
+    }
+    div[role='radiogroup'] label {
+        display: flex;
+        padding: 3px;
+        border: 2px solid #444;
+        border-radius: 5px;
+        background-color: #2E2E2E;  /* Couleur de fond normale (gris) */
+        transition: background-color 0.3s ease;
+        white-space: normal;  /* Autoriser le retour à la ligne */
+        
+    }
+    /* Style au survol des labels */
+    div[role='radiogroup'] label:click {
+        background-color: #a9a9a9;  /* Couleur au survol (gris foncé) */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
     option=st.radio(label=' ',options=pages,horizontal=True)
+    
+    st.markdown("<br><br>", unsafe_allow_html=True)
 
     # Afficher le contenu en fonction de la sélection
     if option == page1:
@@ -95,7 +124,10 @@ def option1(df_all,df_queue):
         
         plot_and_download(c1,Top5Agence(df_all,df_queue,'Total Tickets','Nombre de Clients'),button_key='5')
         plot_and_download(c2,Top5Agence(df_all,df_queue,'Total Traités','Nombre de Clients'),button_key='6')
- 
+    
+    elif option ==page7:
+        gird_congestion(df_all,df_queue)
+
         
    
 
@@ -112,17 +144,42 @@ def option2(df_selected,df_queue):
     
     page1='***Top10 & Temps Moyen (Opération)***'
     page2='***Agents & Queue***'
-    page3='***Evolution Nbr Clients***'
-    page4="***Performance Agents en Nbr de Clients***"
-    page5='***Performance Agents en Temps***'
+    page3='***Evolution du Nombre de Clients***'
+    page4="***Performance Agent en Nombre de Clients***"
+    page5='***Performance Agent en Temps***'
 
 
 
     pages = [page1,page2,page3,page4,page5]
     # Injecter du CSS personnalisé
+    st.markdown(
+    """
+    <style>
+    /* Style général pour les labels */
+    div[role='radiogroup'] {
+        display: flex;
+        flex-direction: row;  /* Disposer les labels horizontalement */
+        flex-wrap: nowrap;    /* Empêcher le retour à la ligne */
     
-    option=st.radio(label=' ',options=pages,horizontal=True)
-    
+    }
+    div[role='radiogroup'] label {
+        padding: 3px;
+        border: 2px solid #444;
+        border-radius: 5px;
+        background-color: #2E2E2E;  /* Couleur de fond normale (gris) */
+        transition: background-color 0.3s ease;
+    }
+    /* Style au survol des labels */
+    div[role='radiogroup'] label:click {
+        background-color: #a9a9a9;  /* Couleur au survol (gris foncé) */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+    option=st.radio(label='',options=pages)
+    st.markdown("<br><br>", unsafe_allow_html=True)
+
     
     if option == page1:
         

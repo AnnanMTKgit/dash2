@@ -248,15 +248,15 @@ def generate_agence(df):
     #new_agencies = [f'Agence_{i+1}' for i in range(num_new_agencies)]
     d={'Agence Ecobank Ngor':[14.754164, -17.506642],'Ecobank Yoff':[14.759643, -17.467951],
 
-    'Ecobank Sacré Coeur':[14.723065, -17.469012],'ECOBANK Maristes':[14.745871, -17.430285],
+    'Ecobank Sacré Coeur':[14.723065, -17.469012],'Ecobank Maristes':[14.745871, -17.430285],
 
     'Ecobank Agence Ouakam':[14.724443, -17.487083],'Ecobank de Tilène':[14.683164, -17.446533],
 
     'Ecobank':[14.724788, -17.442350],'Ecobank Keur Massar':[14.781027, -17.319195],'ECOBANK':[14.708073, -17.437760],
 
-    'Ecobank HLM':[14.713197, -17.444832],'Ecobank Sénégal':[14.704719, -17.470716],'Ecobank Plateau':[14.672557, -17.432282],
+    'Ecobank Hlm':[14.713197, -17.444832],'Ecobank Sénégal':[14.704719, -17.470716],'Ecobank Plateau':[14.672557, -17.432282],
 
-    'EcoBank Sicap':[14.712269, -17.460110],'Ecobank Domaine industriel':[14.725120, -17.442350]
+    'EcoBank Sicap':[14.712269, -17.460110],'Ecobank Domaine Industriel':[14.725120, -17.442350]
 
     }
     rows_per_agency = int(len(df)/len(d.keys()))
@@ -573,8 +573,87 @@ def plot_and_download(col, fig, button_key):
         col.plotly_chart(fig,config=config,use_container_width=True)
         
         
+def plot_congestion(df):
+    
+    max_length=df['Capacites'].values[0]
+    queue_length=df['AttenteActuel'].values[0]
+    
+    percentage = (queue_length / max_length) * 100
+    
+    display_value = queue_length if queue_length < max_length else " Capacité Atteinte"
+    bar_color = '#FF0000' if queue_length >= max_length else ('white' if percentage ==0 else
+        '#00CC96' if percentage < 50 else '#FFA15A' if percentage < 80 else "#EF553B"
+    )
+    titre={"white":'Vide','#00CC96':"Modérement occupée","#FFA500":"Fortement occupée","#EF553B":"Très fortement occupée ",'#FF0000':'Congestionnée'}
+    prefix_text = (
+    f"<span style='color:white; font-size:20px;'>"
+    f"Client(s) en Attente: <span style='color:{bar_color};'>{queue_length}</span>"
+    "</span>"
+)
 
 
+    fig = go.Figure(go.Indicator(
+        mode = "gauge+delta",
+        value = queue_length,
+        number={'suffix': '' if queue_length <= max_length else display_value},
+        delta = {'reference': -1, 'increasing': {'color': "#2E2E2E"},'prefix': prefix_text ,'font': {'size': 24}},
+        #delta={'reference': 0, 'increasing': {'color': bar_color}},
+        gauge = {
+            'axis': {'range': [0, max_length]},
+            'bar': {'color': bar_color, 'thickness': 0.00002},  # Barre très fine
+            'steps': [
+                
+                {'range': [0, 0.5 * max_length], 'color': '#00CC96'},
+                {'range': [0.5 * max_length, 0.80 * max_length], 'color':'#FFA15A'},
+                {'range': [0.80 * max_length, max_length], 'color': "#EF553B"},
+                
+
+            ],
+            'threshold': {
+                'line': {'color': "black", 'width': 4},
+                'thickness': 0.95,
+                'value': queue_length
+            }
+        },
+        title = {'text': titre[bar_color], 'font': {'size': 20, 'color': bar_color}},  # Increased font size to 24
+        domain = {'x': [0, 1], 'y': [0, 1]}
+    ))
+    if queue_length > max_length:
+        fig.update_traces(number={'valueformat': "d", 'font': {'size': 12}, 'suffix': display_value})
+    fig.update_layout(
+        height=400,
+        margin=dict(l=30, r=30, t=30, b=30),plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
+    xaxis_title='Client(s) en Attente',  # Ajouter le titre de l'axe des X
+    xaxis_title_font=dict(size=16, color='white'),  # Définir la taille et la couleur de la police
+    )
+    return fig 
+
+def gird_congestion(df_all,df_queue):
+    agg = AgenceTable(df_all,df_queue)
+    agg=agg.rename(columns={"Nom d'Agence":'NomAgence','Capacité':'Capacites',"Temps Moyen d'Operation (MIN)":'Temps_Moyen_Operation',"Temps Moyen d'Attente (MIN)":'Temps_Moyen_Attente','Total Traités':'NombreTraites','Total Tickets':'NombreTickets','Nbs de Clients en Attente':'AttenteActuel'})
+    list_agences=list(df_queue['NomAgence'].unique())
+    num_cols = 3
+    num_agences=len(list_agences)
+    # Créer une grille de figures avec des colonnes dynamiques
+    st.markdown(
+    """
+    <div style="text-align: center; font-size: 5px;">
+        <h1>Etat des files d'attente</h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+)     
+
+    # Créer les colonnes
+    columns = st.columns(num_cols)
+
+    for i in range(num_agences):
+        col_index = i % num_cols
+        with columns[col_index]:
+            st.subheader(f'{list_agences[i]}')
+            df=agg[agg['NomAgence']==list_agences[i]]
+            fig = plot_congestion(df)
+            st.plotly_chart(fig, use_container_width=True)
 
 def Conjection(df_all,df_queue):
     c1,c2,c3=st.columns([30,55,15])
@@ -706,22 +785,34 @@ def HomeGlob(df_all,df_queue):
     capacite=agg['Nbs de Clients en Attente'].values[0]
     
     def tmo_col(val):
-        color = 'background-color: #50C878' if val >= 5 else ''
+        color = 'background-color: #50C878 ; color: black' if val >= 5 else ''
         return color
     def tma_col(val):
-        color = 'background-color: #4169E1' if val > 15 else ''
+        color = 'background-color:#EF553B ; color: black' if val > 15 else ''
         return color
     
 
 
 
-    agg=agg[['Période',"Nom d'Agence", "Temps Moyen d'Operation (MIN)", "Temps Moyen d'Attente (MIN)","Temps Moyen de Passage(MIN)",'Capacité','Total Tickets','Total Traités','TotalMobile','Nbs de Clients en Attente']]
+    agg=agg[['Période',"Nom d'Agence", "Temps Moyen d'Operation (MIN)", "Temps Moyen d'Attente (MIN)","Temps Moyen de Passage(MIN)",'Capacité','Total Tickets','Total Traités','TotalMobile']]
+    
+    
+
+# Créer un bouton de téléchargement
+
+    st.download_button(
+        label="⬇",
+        data=agg.to_csv(index=False).encode('utf-8'),
+        file_name='data.csv',
+        mime='text/csv'
+    )
     agg=agg.style.applymap(tmo_col, subset=["Temps Moyen d'Operation (MIN)"])
     agg=agg.applymap(tma_col, subset=["Temps Moyen d'Attente (MIN)"])
-    #agg=agg.applymap(nbs_col, subset=['Nbs de Clients en Attente'])
-    st.dataframe(agg)
+   
+    st.markdown(agg.to_html(index=False), unsafe_allow_html=True)
     
-    
+
+
     
 
 
