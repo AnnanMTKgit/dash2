@@ -744,8 +744,16 @@ def Conjection(df_all,df_queue):
 def GraphsGlob(df_all):
     
 
-    df = (df_all.groupby(by=['NomService']).mean()['TempOperation'] / 60).dropna().astype(int).reset_index()
-    
+    #df = (df_all.groupby(by=['NomService']).mean()['TempOperation'] / 60).dropna().astype(int).reset_index()
+    df = (
+    df_all.groupby(by=['NomService'])['TempOperation']
+    .mean(skipna=True)   # This skips NaN values when calculating the mean
+    .div(60)             # Divide by 60 to convert to hours
+    .fillna(0)           # Optionally fill NaN values with 0 after the division
+    .astype(int)         # Convert to integers
+    .reset_index()       # Reset the index
+)
+
 
     fig_tempOp_1 = go.Figure()
    
