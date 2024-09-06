@@ -118,13 +118,19 @@ def option1(df_all,df_queue):
         titre2="Top5 Agences les Plus Lentes en Temps de d'Operation"
         c3.plotly_chart(area_graph(df_all,concern='NomAgence',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title=titre2))
     elif option == page6:
-        #st.subheader("Top5 Agences les plus Fréquentées")
+       
         st.markdown(f"<h2 style='color:white; font-size:20px;text-align:center;'>Top5 Agences les plus Fréquentées</h2>", unsafe_allow_html=True)
-        c1,c2=st.columns(2)
+        c1,c2=st.columns([50,50])
         
-        plot_and_download(c1,Top5Agence(df_all,df_queue,'Total Tickets','Nombre de Clients'),button_key='5')
-        plot_and_download(c2,Top5Agence(df_all,df_queue,'Total Traités','Nombre de Clients'),button_key='6')
-    
+        # plot_and_download(c1,top(df_all,df_queue,title=['Total Tickets','Total Traités'],color=['#00CC96','#FFA15A']),button_key='5')
+        
+        # plot_and_download(c2,top(df_all,df_queue,title=['Total Tickets','Total Passées'],color=['#00CC96','orange']),button_key='6')
+
+        # plot_and_download(c1,top(df_all,df_queue,title=['Total Tickets','Total Rejetées'],color=['#00CC96',"#EF553B"]),button_key='7')
+        c1.plotly_chart(top(df_all,df_queue,title=['Total Tickets','Total Traités'],color=['#00CC96','#FFA15A']))
+        c1.plotly_chart(top(df_all,df_queue,title=['Total Tickets','Total Rejetées'],color=['#00CC96',"#EF553B"]))
+        c2.plotly_chart(top(df_all,df_queue,title=['Total Tickets','Total Passées'],color=['#00CC96','orange']))
+        # c2.plotly_chart(top(df_all,df_queue,'Total Traités'))
     elif option ==page7:
         gird_congestion(df_all,df_queue)
 
@@ -240,7 +246,7 @@ if len(df)==0:
     st.warning("C'est peut être le Week-End ou un jour non ouvrable pour la banque")
     st.stop()
 else:
-    
+    #df=generate_agence(df)
     NomAgence=st.sidebar.multiselect(
         'Agences',
         options=df['NomAgence'].unique(),

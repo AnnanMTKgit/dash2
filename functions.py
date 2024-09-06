@@ -17,6 +17,7 @@ import plotly.io as pio
 import copy
 import altair as alt
 import seaborn as sns
+import random
 import plotly.figure_factory as ff
 ######################### Global Analysis ####################
 
@@ -259,9 +260,11 @@ def generate_agence(df):
     'EcoBank Sicap':[14.712269, -17.460110],'Ecobank Domaine Industriel':[14.725120, -17.442350]
 
     }
-    rows_per_agency = int(len(df)/len(d.keys()))
+    
+    
     # Update the 'NomAgence' column with new agency names in blocks of 500 rows
     for i,agency in enumerate(d.keys()):
+        rows_per_agency = random.randint(0, int(len(df)/len(d.keys())))
         start_index = i * rows_per_agency
         end_index = start_index + rows_per_agency
         lat,long=d[agency]
@@ -764,7 +767,7 @@ def AgenceTable(df_all,df_queue):
     df1=df_all.copy()
     agg1 = df1.groupby(['NomAgence', 'Capacites']).agg(
     Temps_Moyen_Operation=('TempOperation', lambda x: np.round(np.mean(x)/60).astype(int)),
-    Temps_Moyen_Attente=('TempsAttenteReel', lambda x: np.round(np.mean(x)/60).astype(int)),NombreTraites=('UserName',lambda x: int(sum(x.notna())))
+    Temps_Moyen_Attente=('TempsAttenteReel', lambda x: np.round(np.mean(x)/60).astype(int)),NombreTraites=('Nom',lambda x: (x == 'Traitée').sum()),NombreRejetee=('Nom',lambda x: (x == 'Rejetée').sum()),NombrePassee=('Nom',lambda x: (x == 'Passée').sum())
 ).reset_index()
     agg1["Temps Moyen de Passage(MIN)"]=agg1['Temps_Moyen_Attente']+agg1['Temps_Moyen_Operation']
     df2=df_queue.copy()
@@ -772,9 +775,9 @@ def AgenceTable(df_all,df_queue):
     agg2=df2.groupby(['NomAgence', 'Capacites','Longitude','Latitude']).agg(NombreTickets=('Date_Reservation', np.count_nonzero),AttenteActuel=("NomAgence",lambda x: current_attente(df2,agence=x.iloc[0],HeureFermeture=df2[df2['NomAgence']==x.iloc[0]]['HeureFermeture'].values[0])),TotalMobile=('IsMobile',lambda x: int(sum(x)))).reset_index()
     
     agg=pd.merge(agg2,agg1,on=['NomAgence', 'Capacites'],how='outer')
-    agg=agg.rename(columns={'NomAgence':"Nom d'Agence",'Capacites':'Capacité','Temps_Moyen_Operation':"Temps Moyen d'Operation (MIN)",'Temps_Moyen_Attente':"Temps Moyen d'Attente (MIN)",'NombreTraites':'Total Traités','NombreTickets':'Total Tickets','AttenteActuel':'Nbs de Clients en Attente'})
-    agg["Période"]=f"Du {df_queue['Date_Reservation'].min().strftime('%Y-%m-%d')} à {df_queue['Date_Reservation'].max().strftime('%Y-%m-%d')}"
-    order=['Période',"Nom d'Agence", "Temps Moyen d'Operation (MIN)", "Temps Moyen d'Attente (MIN)","Temps Moyen de Passage(MIN)",'Capacité','Total Tickets','Total Traités','TotalMobile','Nbs de Clients en Attente','Longitude','Latitude']
+    agg=agg.rename(columns={'NomAgence':"Nom d'Agence",'Capacites':'Capacité','Temps_Moyen_Operation':"Temps Moyen d'Operation (MIN)",'Temps_Moyen_Attente':"Temps Moyen d'Attente (MIN)",'NombreTraites':'Total Traités','NombreRejetee':'Total Rejetées','NombrePassee':'Total Passées','NombreTickets':'Total Tickets','AttenteActuel':'Nbs de Clients en Attente'})
+    agg["Période"]=f"{df_queue['Date_Reservation'].min().strftime('%Y-%m-%d')} - {df_queue['Date_Reservation'].max().strftime('%Y-%m-%d')}"
+    order=['Période',"Nom d'Agence", "Temps Moyen d'Operation (MIN)", "Temps Moyen d'Attente (MIN)","Temps Moyen de Passage(MIN)",'Capacité','Total Tickets','Total Traités','Total Rejetées','Total Passées','TotalMobile','Nbs de Clients en Attente','Longitude','Latitude']
     agg=agg[order]
     
     return agg
@@ -806,7 +809,11 @@ def HomeGlob(df_all,df_queue):
         file_name='data.csv',
         mime='text/csv'
     )
-    agg=agg.style.applymap(tmo_col, subset=["Temps Moyen d'Operation (MIN)"])
+    agg=agg.style.set_properties(**{
+    'background-color': "#2E2E2E",
+    'color': 'white',
+})
+    agg=agg.applymap(tmo_col, subset=["Temps Moyen d'Operation (MIN)"])
     agg=agg.applymap(tma_col, subset=["Temps Moyen d'Attente (MIN)"])
    
     st.markdown(agg.to_html(index=False), unsafe_allow_html=True)
@@ -850,12 +857,43 @@ def Top10_Type(df_queue):
     
     return fig
 
-def Top5Agence(df_all,df_queue,title,text):
+def top(df_all,df_queue,title,color=['#00CC96','#FFA15A']): 
+    agg=AgenceTable(df_all,df_queue)
+    agg=agg[["Nom d'Agence",title[0],title[1]]]
+    st.write(agg)
+
+    top_counts0=agg[["Nom d'Agence",title[0]]]
+    top_counts0=top_counts0.sort_values(by=title[0], ascending=False)
+    top_counts0=top_counts0.head(5)
+    top_counts0=top_counts0.rename(columns={title[0]:'Total'})
+    top_counts0['Statut']=title[0].split(' ')[1]
+    st.write(top_counts0)
+
+    top_counts1=agg[["Nom d'Agence",title[1]]]
+    top_counts1=top_counts1.sort_values(by=title[1], ascending=False)
+    top_counts1=top_counts1.head(5)
+    top_counts1=top_counts1.rename(columns={title[1]:'Total'})
+    top_counts1['Statut']=title[1].split(' ')[1]
+    st.write(top_counts1)
+    
+    top_counts = pd.concat([top_counts0, top_counts1], axis=0)
+    st.write(top_counts)
+    fig = px.funnel(top_counts, x='Total', y="Nom d'Agence",color='Statut',color_discrete_sequence=color)
+    fig.update_layout(title={
+        'text': f'{title[0]} vs {title[1]}',
+        'x': 0.5,  # Center the title
+        'xanchor': 'center' # Set your desired color
+        
+        },plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
+                  xaxis=dict(title='tt',tickfont=dict(size=10)),width=600,
+                  yaxis=dict(title="Nom d'Agence"))
+    return fig
+
+def Top5Agence(df_all,df_queue,title,text,colore='#FFA15A'):
     agg=AgenceTable(df_all,df_queue)
     top_counts=agg.sort_values(by=title, ascending=False)
     top_counts=top_counts.head(5)
     top_counts = top_counts.iloc[::-1]
-    
     
     fig = go.Figure()
     if top_counts.empty==False:
@@ -868,10 +906,10 @@ def Top5Agence(df_all,df_queue,title,text):
         
         # Ajouter les barres pour les valeurs >= 100
         fig.add_trace(go.Bar(go.Bar(x=dfmin[title], y=dfmin["Nom d'Agence"],orientation='h',text=dfmin[title],width=[0.6] * len(dfmin["Nom d'Agence"]) ,  # Réduire la largeur de la barre
-        textposition='outside',showlegend=False,textfont=dict(color='white'),marker=dict(color= '#FFA15A'))
+        textposition='outside',showlegend=False,textfont=dict(color='white'),marker=dict(color= colore))
         ))
         fig.add_trace(go.Bar(go.Bar(x=dfmax[title], y=dfmax["Nom d'Agence"],orientation='h',text=dfmax[title],width=[0.6] * len(dfmax["Nom d'Agence"]) ,  # Réduire la largeur de la barre
-        textposition='inside',showlegend=False,textfont=dict(color='black'),marker=dict(color= '#FFA15A'))
+        textposition='inside',showlegend=False,textfont=dict(color='black'),marker=dict(color= colore))
         ))
     
     fig.update_layout(title={
@@ -1118,7 +1156,9 @@ def create_pie_chart(df, title):
             marker=dict(colors = ['#636EFA', '#EF553B', '#00CC96', '#AB63FA','#FFA15A', '#19D3F3', '#FF6692', '#B6E880','#FF97FF', '#FECB52'], line=dict(color='#FFFFFF', width=2)),
             textinfo='percent' ,textposition= 'inside'
         ))
-        
+    #fig = px.pie(top, values='Nom', names='UserName',color_discrete_sequence=['#636EFA', '#EF553B', '#00CC96', '#AB63FA','#FFA15A', '#19D3F3', '#FF6692', '#B6E880','#FF97FF', '#FECB52'], title=f'Personnes {title}s Par Agent')
+    
+    
 
     # Update layout for aesthetics
     fig.update_layout(
