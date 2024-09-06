@@ -860,24 +860,24 @@ def Top10_Type(df_queue):
 def top(df_all,df_queue,title,color=['#00CC96','#FFA15A']): 
     agg=AgenceTable(df_all,df_queue)
     agg=agg[["Nom d'Agence",title[0],title[1]]]
-    st.write(agg)
+    
 
     top_counts0=agg[["Nom d'Agence",title[0]]]
     top_counts0=top_counts0.sort_values(by=title[0], ascending=False)
     top_counts0=top_counts0.head(5)
     top_counts0=top_counts0.rename(columns={title[0]:'Total'})
     top_counts0['Statut']=title[0].split(' ')[1]
-    st.write(top_counts0)
+    
 
     top_counts1=agg[["Nom d'Agence",title[1]]]
     top_counts1=top_counts1.sort_values(by=title[1], ascending=False)
     top_counts1=top_counts1.head(5)
     top_counts1=top_counts1.rename(columns={title[1]:'Total'})
     top_counts1['Statut']=title[1].split(' ')[1]
-    st.write(top_counts1)
+    
     
     top_counts = pd.concat([top_counts0, top_counts1], axis=0)
-    st.write(top_counts)
+    
     fig = px.funnel(top_counts, x='Total', y="Nom d'Agence",color='Statut',color_discrete_sequence=color)
     fig.update_layout(title={
         'text': f'{title[0]} vs {title[1]}',
