@@ -819,6 +819,7 @@ def GraphsGlob(df_all):
 
 def AgenceTable(df_all,df_queue):
     df1=df_all.copy()
+    df1[['TempOperation','TempsAttenteReel']]=df1[['TempOperation','TempsAttenteReel']].fillna(0)
     agg1 = df1.groupby(['NomAgence', 'Capacites']).agg(
     Temps_Moyen_Operation=('TempOperation', lambda x: np.round(np.mean(x)/60).astype(int)),
     Temps_Moyen_Attente=('TempsAttenteReel', lambda x: np.round(np.mean(x)/60).astype(int)),NombreTraites=('Nom',lambda x: (x == 'Traitée').sum()),NombreRejetee=('Nom',lambda x: (x == 'Rejetée').sum()),NombrePassee=('Nom',lambda x: (x == 'Passée').sum())
