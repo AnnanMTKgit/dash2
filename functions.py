@@ -741,7 +741,7 @@ def Conjection(df_all,df_queue):
     bar_color = '#FF0000' if queue_length >= max_length else ('white' if percentage ==0 else
         '#00CC96' if percentage < 50 else '#FFA15A' if percentage < 80 else "#EF553B"
     )
-    titre={"white":'Vide','#00CC96':"Modérement occupée","#FFA500":"Fortement occupée","#EF553B":"Très fortement occupée ",'#FF0000':'Congestionnée'}
+    titre={"white":'Vide','#00CC96':"Modérement occupée",'#FFA15A':"Fortement occupée","#EF553B":"Très fortement occupée ",'#FF0000':'Congestionnée'}
     prefix_text = (
     f"<span style='color:white; font-size:20px;'>"
     f"Client(s) en Attente: <span style='color:{bar_color};'>{queue_length}</span>"
