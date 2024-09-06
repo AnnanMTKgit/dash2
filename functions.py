@@ -147,6 +147,32 @@ def stacked_chart(data,type:str,concern:str,titre):
         top_operations = top_operations.sort_values(['UserName', 'Categorie', type], ascending=[True, True, False])
         top_operations = top_operations.groupby([f'{concern}', 'Categorie']).head(5)
         
+        if len(top_operations)==0:
+            chart = alt.Chart(top_operations).mark_bar().encode(
+            x=alt.X(f'{concern}:O', title=f'{x}'),
+            y=alt.Y('Count:Q', title='Nombre par Categorie'),
+            color=alt.Color('Categorie:N', title='Queue',sort=top_categories,scale=color_scale),
+            order=alt.Order('Categorie:N',title='Queue'),  # Ensures the stacking order
+            tooltip=[
+                alt.Tooltip('UserName:O', title=f'{x}'),
+                alt.Tooltip('Count:Q', title='Nombre'),
+                alt.Tooltip('Categorie:N', title='Queue'),
+                alt.Tooltip('TopOperations:N', title='5 premières opérations')
+            ]
+        ).properties(
+            width=1000,
+            height=400,
+         title={
+        "text": f"{titre} par {x}",
+        "anchor": "middle",
+        "fontSize": 16,
+        "font": "Helvetica",
+        "color": "white"
+    }
+        ).configure(
+    background='#2E2E2E'   # Set the background color for the entire figure
+) 
+            return chart
 
         # Combine the TypeOperation, TempOperation, and OperationCount into a single string for tooltips
         top_operations['TopOperations'] = top_operations.apply(
@@ -342,7 +368,30 @@ def area_graph(data,concern='UserName',time='TempOperation',date_to_bin='Date_Fi
 
 
     # Group by Nom_Agence and Time_Bin, and calculate the average TempAttente
-    grouped_data = df.groupby([concern, 'Time_Bin'])[[time]].agg(( lambda x: np.round(np.mean(x)/60).astype(int))).reset_index()
+    #grouped_data = df.groupby([concern, 'Time_Bin'])[[time]].agg(( lambda x: np.round(np.mean(x)/60).astype(int))).reset_index()
+
+    grouped_data = df.groupby([concern, 'Time_Bin'])[[time]].agg(lambda x: np.round(np.nanmean(x) / 60).astype(int)).reset_index()
+    
+    
+    if len(grouped_data)==0:
+        fig=go.Figure()
+        fig.update_layout(
+        title={
+        'text': title,
+        'x': 0.5,  # Center the title
+        'xanchor': 'center'
+             
+        },plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
+        xaxis_title=f'Intervalle de Temps en {unit}',
+        yaxis_title='Temp Moyen (minutes)',
+        template='plotly_dark',
+        legend_title=concern,width=1000,
+         xaxis=dict(
+            tickvals=df['Time_Bin'].unique()  # Only show unique Time_Bin values present in agency_data
+        )
+
+    )
+        return fig
 
     # Select the top 5 agencies with the largest area under the curve
     if len(df['NomAgence'].unique())==1 and concern=='UserName':
@@ -402,7 +451,10 @@ def area_graph(data,concern='UserName',time='TempOperation',date_to_bin='Date_Fi
     if unit=="Heure":
         h=all_combinations.sort_values(by='Time_Bin', key=lambda x: pd.Categorical(x, categories=time_bin_labels, ordered=True))
         h=list(h['Time_Bin'].unique())
-        a,b=h[0],h[-1]
+        if len(h)!=0:
+            a,b=h[0],h[-1]
+        else:
+            a,b=0,0
     else:
         a,b=all_combinations['Time_Bin'].min(),all_combinations['Time_Bin'].max()
     fig.add_shape(
@@ -745,14 +797,8 @@ def GraphsGlob(df_all):
     
 
     #df = (df_all.groupby(by=['NomService']).mean()['TempOperation'] / 60).dropna().astype(int).reset_index()
-    df = (
-    df_all.groupby(by=['NomService'])['TempOperation']
-    .mean(skipna=True)   # This skips NaN values when calculating the mean
-    .div(60)             # Divide by 60 to convert to hours
-    .fillna(0)           # Optionally fill NaN values with 0 after the division
-    .astype(int)         # Convert to integers
-    .reset_index()       # Reset the index
-)
+    df = df_all.groupby(by=['NomService']).agg(
+    TempOperation=('TempOperation', lambda x: np.round(np.mean(x)/60).astype(int))).reset_index()
 
 
     fig_tempOp_1 = go.Figure()
