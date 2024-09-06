@@ -19,6 +19,7 @@ import altair as alt
 import seaborn as sns
 import random
 import plotly.figure_factory as ff
+import plotly.subplots as sp
 ######################### Global Analysis ####################
 
 
@@ -913,7 +914,7 @@ def Top10_Type(df_queue):
     
     return fig
 
-def top(df_all,df_queue,title,color=['#00CC96','#FFA15A']): 
+def topAg(df_all,df_queue,title,color=['#00CC96','#FFA15A']): 
     agg=AgenceTable(df_all,df_queue)
     agg=agg[["Nom d'Agence",title[0],title[1]]]
     
@@ -922,27 +923,32 @@ def top(df_all,df_queue,title,color=['#00CC96','#FFA15A']):
     top_counts0=top_counts0.sort_values(by=title[0], ascending=False)
     top_counts0=top_counts0.head(5)
     top_counts0=top_counts0.rename(columns={title[0]:'Total'})
-    top_counts0['Statut']=title[0].split(' ')[1]
+    top_counts0['Statut']=title[0]
     
 
     top_counts1=agg[["Nom d'Agence",title[1]]]
     top_counts1=top_counts1.sort_values(by=title[1], ascending=False)
     top_counts1=top_counts1.head(5)
     top_counts1=top_counts1.rename(columns={title[1]:'Total'})
-    top_counts1['Statut']=title[1].split(' ')[1]
+    top_counts1['Statut']=title[1]
     
     
     top_counts = pd.concat([top_counts0, top_counts1], axis=0)
     
     fig = px.funnel(top_counts, x='Total', y="Nom d'Agence",color='Statut',color_discrete_sequence=color)
-    fig.update_layout(title={
-        'text': f'{title[0]} vs {title[1]}',
-        'x': 0.5,  # Center the title
-        'xanchor': 'center' # Set your desired color
-        
-        },plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
-                  xaxis=dict(title='tt',tickfont=dict(size=10)),width=600,
-                  yaxis=dict(title="Nom d'Agence"))
+    fig.update_layout(plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
+                  xaxis=dict(title='tt',tickfont=dict(size=10)),width=550,
+        height=400,
+        margin=dict(l=10, r=10, t=10, b=50),
+                  yaxis=dict(title="Nom d'Agence"),
+                  legend=dict(title='',
+        x=0,  # Center horizontally
+        y=1.15,  # Place legend above the plot (adjust as needed)
+        orientation='h',
+        xanchor='left',  # Positioning legend box
+        yanchor='top',  # Positioning legend box
+        font=dict(size=12)  # Font size of legend text
+    ))
     return fig
 
 def Top5Agence(df_all,df_queue,title,text,colore='#FFA15A'):

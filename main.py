@@ -120,16 +120,14 @@ def option1(df_all,df_queue):
     elif option == page6:
        
         st.markdown(f"<h2 style='color:white; font-size:20px;text-align:center;'>Top5 Agences les plus Fréquentées</h2>", unsafe_allow_html=True)
-        c1,c2=st.columns([50,50])
+        c1,c2=st.columns(2)
         
-        # plot_and_download(c1,top(df_all,df_queue,title=['Total Tickets','Total Traités'],color=['#00CC96','#FFA15A']),button_key='5')
-        
-        # plot_and_download(c2,top(df_all,df_queue,title=['Total Tickets','Total Passées'],color=['#00CC96','orange']),button_key='6')
-
-        # plot_and_download(c1,top(df_all,df_queue,title=['Total Tickets','Total Rejetées'],color=['#00CC96',"#EF553B"]),button_key='7')
-        c1.plotly_chart(top(df_all,df_queue,title=['Total Tickets','Total Traités'],color=['#00CC96','#FFA15A']))
-        c1.plotly_chart(top(df_all,df_queue,title=['Total Tickets','Total Rejetées'],color=['#00CC96',"#EF553B"]))
-        c2.plotly_chart(top(df_all,df_queue,title=['Total Tickets','Total Passées'],color=['#00CC96','orange']))
+        fig1=topAg(df_all,df_queue,title=['Total Tickets','Total Traités'],color=['#00CC96','#FFA15A'])
+        fig2=topAg(df_all,df_queue,title=['Total Tickets','Total Rejetées'],color=['#00CC96',"#EF553B"])
+        fig3=topAg(df_all,df_queue,title=['Total Tickets','Total Passées'],color=['#00CC96','orange'])
+        c1.plotly_chart(fig1)
+        c1.plotly_chart(fig2)
+        c2.plotly_chart(fig3)
         # c2.plotly_chart(top(df_all,df_queue,'Total Traités'))
     elif option ==page7:
         gird_congestion(df_all,df_queue)
