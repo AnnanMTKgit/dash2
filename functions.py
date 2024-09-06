@@ -796,8 +796,9 @@ def Conjection(df_all,df_queue):
 def GraphsGlob(df_all):
     
 
-    #df = (df_all.groupby(by=['NomService']).mean()['TempOperation'] / 60).dropna().astype(int).reset_index()
-    df = df_all.groupby(by=['NomService']).agg(
+    df=df_all.copy()
+    df['TempOperation']=df['TempOperation'].fillna(0)
+    df = df.groupby(by=['NomService']).agg(
     TempOperation=('TempOperation', lambda x: np.round(np.mean(x)/60).astype(int))).reset_index()
 
 
