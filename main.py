@@ -244,7 +244,7 @@ if len(df)==0:
     st.warning("C'est peut être le Week-End ou un jour non ouvrable pour la banque")
     st.stop()
 else:
-    #df=generate_agence(df)
+    df=generate_agence(df)
     NomAgence=st.sidebar.multiselect(
         'Agences',
         options=df['NomAgence'].unique(),

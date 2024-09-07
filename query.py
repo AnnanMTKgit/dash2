@@ -40,11 +40,12 @@ def get_sqlData_cache(start_date, end_date):
 WHERE Date_Reservation is not NULL and CAST(q.Date_Reservation AS DATE) BETWEEN CAST(? AS datetime) AND CAST(? AS datetime) 
 ORDER BY q.Date_Reservation DESC;
   """
+    connection = None
     try:
         connection = pyodbc.connect(connection_string)
         df = pd.read_sql_query(sql, connection,params=(start_date, end_date), index_col=None)
     except pyodbc.Error as pe:
-        print("Error:", pe)
+        st.error(f"Error connecting to the database: {pe}")
         df = None
     finally:
         connection.close()
@@ -60,11 +61,12 @@ def get_sqlData(start_date, end_date):
 WHERE Date_Reservation is not NULL and CAST(q.Date_Reservation AS DATE) BETWEEN CAST(? AS datetime) AND CAST(? AS datetime) 
 ORDER BY q.Date_Reservation DESC;
   """
+    connection = None
     try:
         connection = pyodbc.connect(connection_string)
         df = pd.read_sql_query(sql, connection,params=(start_date, end_date), index_col=None)
     except pyodbc.Error as pe:
-        print("Error:", pe)
+        st.error(f"Error connecting to the database: {pe}")
         df = None
     finally:
         connection.close()
