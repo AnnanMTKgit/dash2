@@ -115,7 +115,7 @@ def option1(df_all,df_queue):
         titre1="Top5 Agences les Plus Lentes en Temps d'Attente"
         c1.plotly_chart(area_graph(df_all,concern='NomAgence',time='TempsAttenteReel',date_to_bin='Date_Appel',seuil=15,title=titre1))
         c3,c4=st.columns([80,20])
-        titre2="Top5 Agences les Plus Lentes en Temps de d'Operation"
+        titre2="Top5 Agences les Plus Lentes en Temps d'Operation"
         c3.plotly_chart(area_graph(df_all,concern='NomAgence',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title=titre2))
     elif option == page6:
        
