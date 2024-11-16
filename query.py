@@ -71,3 +71,24 @@ ORDER BY q.Date_Reservation DESC;
     
     
     return  df
+@st.cache_data(hash_funcs={pyodbc.Connection: id}, show_spinner=False)
+def profil():
+    sql=f"""SELECT
+      U.[FirstName]
+      ,U.[LastName]
+      ,U.[PhoneNumber]
+      ,U.[UserName]
+      ,U.[Token] as MotDePasse
+      ,R.Label as Profil
+      ,a.NomAgence
+  FROM [User] U  LEFT JOIN [Role] R ON U.[RoleId]= R.Id LEFT JOIN Agence a ON a.Id = U.AgenceId"""
+    try:
+        connection = pyodbc.connect(connection_string)
+        df = pd.read_sql_query(sql, connection, index_col=None)
+    except pyodbc.Error as pe:
+        print("Error:", pe)
+        df = None
+    finally:
+        connection.close()
+    
+    return  df

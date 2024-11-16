@@ -43,7 +43,7 @@ def TempsPassage(data):
     top_categories=['0-30min','30min-1h','>1h']
     color_scale = alt.Scale(
         domain=top_categories,  # The top categories you want to color specifically
-        range=['#00CC96','#FFA15A',"#EF553B"]  # Replace with the colors you want to assign to each category
+        range=['#00CC96',"#FFA500","#EF553B"]  # Replace with the colors you want to assign to each category
     )
         
     chart = alt.Chart(df).mark_bar().encode(
@@ -69,7 +69,7 @@ def TempsPassage(data):
 
 
 
-def stacked_chart(data,type:str,concern:str,titre):
+def stacked_chart(data,type:str,concern:str,titre,w=1000,h=400):
     """
     Default values of type:
     'TempsAttenteReel' and 'TempOperation'
@@ -81,7 +81,7 @@ def stacked_chart(data,type:str,concern:str,titre):
     top_categories=['0-5min','5-10min','>10min']
     color_scale = alt.Scale(
         domain=top_categories,  # The top categories you want to color specifically
-        range=['#00CC96','#FFA15A',"#EF553B"]   # Replace with the colors you want to assign to each category
+        range=['#00CC96',"#FFA500","#EF553B"]   # Replace with the colors you want to assign to each category
     ) 
       
     if concern=='UserName':
@@ -175,10 +175,10 @@ def stacked_chart(data,type:str,concern:str,titre):
                 alt.Tooltip('TopOperations:N', title='5 premières opérations')
             ]
         ).properties(
-            width=1000,
-            height=400,
+            width=w,
+            height=h,
          title={
-        "text": f"{titre} par {x}",
+        "text": f"{titre}",
         "anchor": "middle",
         "fontSize": 16,
         "font": "Helvetica",
@@ -205,7 +205,7 @@ def stacked_service(data,type:str,concern:str,titre="Nombre de type d'opération
 
     top_categories=df.groupby([f'{concern}'])['Count'].sum().nlargest(53).reset_index()[f'{concern}'].to_list()
     
-    colors = ['#00CC96','#FFA15A',"#EF553B","#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#33FFF0","#FF8333", "#33FF83", "#8C33FF", "#FF3385", "#3385FF",
+    colors = ['#00CC96',"#FFA500","#EF553B","#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#33FFF0","#FF8333", "#33FF83", "#8C33FF", "#FF3385", "#3385FF",
     "#FFBD33", "#33FFBD", "#8CFF33", "#FF33B8", "#33FFCC","#B833FF", "#FF336D", "#3385FF", "#FF8333", "#33A1FF","#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#33FFF0",
     "#FF8333", "#33FF83", "#8C33FF", "#FF3385", "#3385FF","#FFD433", "#33FFD4", "#BD33FF", "#FF33BD", "#33FF99","#FF33B8", "#33A1FF", "#FFBD33", "#33D4FF", "#FF33D4",
     "#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#33FFF0","#FF8333", "#33FF83", "#8C33FF", "#FF3385", "#3385FF"
@@ -313,7 +313,7 @@ def get_time_bins(min_date, max_date, bin_type):
 
     return time_bins
 
-def area_graph(data,concern='UserName',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title='Courbe'):
+def area_graph(data,concern='UserName',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title='Courbe',w=1000,couleur=None):
     df=data.copy()
     df=df.dropna(subset=[date_to_bin])
 
@@ -377,6 +377,8 @@ def area_graph(data,concern='UserName',time='TempOperation',date_to_bin='Date_Fi
             mode='lines+markers',
             fill='tozeroy',
             name=agence,
+            line=dict(color=couleur) if couleur is not None else None,  # Set the color of the curve here
+            marker=dict(color=couleur)if couleur is not None else None,
             showlegend=True
         ))
     
@@ -391,7 +393,7 @@ def area_graph(data,concern='UserName',time='TempOperation',date_to_bin='Date_Fi
         xaxis_title=f'Intervalle de Temps en {unit}',
         yaxis_title='Temp Moyen (minutes)',
         template='plotly_dark',
-        legend_title=concern,width=1000,
+        legend_title=concern,width=w,
          xaxis=dict(
             tickvals=all_combinations['Time_Bin'].unique()  # Only show unique Time_Bin values present in agency_data
         )
@@ -417,7 +419,7 @@ def area_graph(data,concern='UserName',time='TempOperation',date_to_bin='Date_Fi
     # Display the chart in Streamlit
     return fig
 
-def current_attente(df_queue,agence=None,HeureFermeture=None):
+def current_attente(df_queue,agence,HeureFermeture=None):
     current_date = datetime.now().date()
     current_datetime = datetime.now()
    
@@ -430,22 +432,15 @@ def current_attente(df_queue,agence=None,HeureFermeture=None):
         six_pm_datetime=datetime.combine(current_date, time_obj)
 
     if current_datetime > six_pm_datetime:
+    
         return 0
     else:
         var='En attente'
-        if agence==None:
-            
-            df = df_queue.query(
-            f"(Nom == @var) & (Date_Reservation.dt.strftime('%Y-%m-%d') == '{current_date}')"
-        )
-
-            
-            number=len(df)
-        else: 
-            df = df_queue.query(
-            f"(Nom == @var) & (Date_Reservation.dt.strftime('%Y-%m-%d') == '{current_date}') & (NomAgence == @agence)"
-        )
-            number=len(df)
+        
+        df = df_queue.query(
+        f"(Nom == @var) & (Date_Reservation.dt.strftime('%Y-%m-%d') == '{current_date}') & (NomAgence == @agence)"
+    )
+        number=len(df)
         return number
 
 
@@ -585,7 +580,7 @@ def plot_congestion(df):
     
     display_value = queue_length if queue_length < max_length else " Capacité Atteinte"
     bar_color = '#FF0000' if queue_length >= max_length else ('white' if percentage ==0 else
-        '#00CC96' if percentage < 50 else '#FFA15A' if percentage < 80 else "#EF553B"
+        '#00CC96' if percentage < 50 else "#FFA500" if percentage < 80 else "#EF553B"
     )
     titre={"white":'Vide','#00CC96':"Modérement occupée","#FFA500":"Fortement occupée","#EF553B":"Très fortement occupée ",'#FF0000':'Congestionnée'}
     prefix_text = (
@@ -607,7 +602,7 @@ def plot_congestion(df):
             'steps': [
                 
                 {'range': [0, 0.5 * max_length], 'color': '#00CC96'},
-                {'range': [0.5 * max_length, 0.80 * max_length], 'color':'#FFA15A'},
+                {'range': [0.5 * max_length, 0.80 * max_length], 'color':"#FFA500"},
                 {'range': [0.80 * max_length, max_length], 'color': "#EF553B"},
                 
 
@@ -674,7 +669,7 @@ def Conjection(df_all,df_queue):
     # HeureF=df['HeureFermeture'].unique()[0]
     df=agg[agg['NomAgence']==NomAgence]
     with c2:
-        c2.pydeck_chart(deck)
+        c2.pydeck_chart(deck,use_container_width=True)
         
         
     with c3:
@@ -687,7 +682,7 @@ def Conjection(df_all,df_queue):
     
     display_value = queue_length if queue_length < max_length else " Capacité Atteinte"
     bar_color = '#FF0000' if queue_length >= max_length else ('white' if percentage ==0 else
-        '#00CC96' if percentage < 50 else '#FFA15A' if percentage < 80 else "#EF553B"
+        '#00CC96' if percentage < 50 else "#FFA500" if percentage < 80 else "#EF553B"
     )
     titre={"white":'Vide','#00CC96':"Modérement occupée","#FFA500":"Fortement occupée","#EF553B":"Très fortement occupée ",'#FF0000':'Congestionnée'}
     prefix_text = (
@@ -709,7 +704,7 @@ def Conjection(df_all,df_queue):
             'steps': [
                 
                 {'range': [0, 0.5 * max_length], 'color': '#00CC96'},
-                {'range': [0.5 * max_length, 0.80 * max_length], 'color':'#FFA15A'},
+                {'range': [0.5 * max_length, 0.80 * max_length], 'color':"#FFA500"},
                 {'range': [0.80 * max_length, max_length], 'color': "#EF553B"},
                 
 
@@ -857,27 +852,27 @@ def Top10_Type(df_queue):
     
     return fig
 
-def top(df_all,df_queue,title,color=['#00CC96','#FFA15A']): 
+def top(df_all,df_queue,title,color=['#00CC96',"#FFA500"]): 
     agg=AgenceTable(df_all,df_queue)
     agg=agg[["Nom d'Agence",title[0],title[1]]]
-    st.write(agg)
+    
 
     top_counts0=agg[["Nom d'Agence",title[0]]]
     top_counts0=top_counts0.sort_values(by=title[0], ascending=False)
     top_counts0=top_counts0.head(5)
     top_counts0=top_counts0.rename(columns={title[0]:'Total'})
     top_counts0['Statut']=title[0].split(' ')[1]
-    st.write(top_counts0)
+    
 
     top_counts1=agg[["Nom d'Agence",title[1]]]
     top_counts1=top_counts1.sort_values(by=title[1], ascending=False)
     top_counts1=top_counts1.head(5)
     top_counts1=top_counts1.rename(columns={title[1]:'Total'})
     top_counts1['Statut']=title[1].split(' ')[1]
-    st.write(top_counts1)
+    
     
     top_counts = pd.concat([top_counts0, top_counts1], axis=0)
-    st.write(top_counts)
+    
     fig = px.funnel(top_counts, x='Total', y="Nom d'Agence",color='Statut',color_discrete_sequence=color)
     fig.update_layout(title={
         'text': f'{title[0]} vs {title[1]}',
@@ -885,50 +880,17 @@ def top(df_all,df_queue,title,color=['#00CC96','#FFA15A']):
         'xanchor': 'center' # Set your desired color
         
         },plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
-                  xaxis=dict(title='tt',tickfont=dict(size=10)),width=600,
+                  xaxis=dict(title='tt',tickfont=dict(size=10)),
                   yaxis=dict(title="Nom d'Agence"))
     return fig
 
-def Top5Agence(df_all,df_queue,title,text,colore='#FFA15A'):
-    agg=AgenceTable(df_all,df_queue)
-    top_counts=agg.sort_values(by=title, ascending=False)
-    top_counts=top_counts.head(5)
-    top_counts = top_counts.iloc[::-1]
-    
-    fig = go.Figure()
-    if top_counts.empty==False:
-        valmax=top_counts[title].max()
-        
-        dfmax=top_counts[top_counts[title].apply(lambda x:(x>=100) and (valmax-x<=100))]
-    
-        dfmin=top_counts[top_counts[title].apply(lambda x:(x<100) or (valmax-x>100))]
-    # Ajouter les barres pour les valeurs < 100
-        
-        # Ajouter les barres pour les valeurs >= 100
-        fig.add_trace(go.Bar(go.Bar(x=dfmin[title], y=dfmin["Nom d'Agence"],orientation='h',text=dfmin[title],width=[0.6] * len(dfmin["Nom d'Agence"]) ,  # Réduire la largeur de la barre
-        textposition='outside',showlegend=False,textfont=dict(color='white'),marker=dict(color= colore))
-        ))
-        fig.add_trace(go.Bar(go.Bar(x=dfmax[title], y=dfmax["Nom d'Agence"],orientation='h',text=dfmax[title],width=[0.6] * len(dfmax["Nom d'Agence"]) ,  # Réduire la largeur de la barre
-        textposition='inside',showlegend=False,textfont=dict(color='black'),marker=dict(color= colore))
-        ))
-    
-    fig.update_layout(title={
-        'text': f'{title}',
-        'x': 0.5,  # Center the title
-        'xanchor': 'center' # Set your desired color
-        
-        },plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
-                  xaxis=dict(title=text,tickfont=dict(size=10)),width=500,margin=dict(l=150, r=50, t=50, b=150),
-                  yaxis=dict(title="Nom d'Agence"))
-    
-    return fig
 
 
 
 
 ######################## Analysis with filter ###################
 
-def stacked_agent(data,type:str,concern:str,titre="Nombre de type d'opération par Agent"):
+def stacked_agent(data,type:str,concern:str,titre="Nombre de type d'opération par Agent",w=1000,h=400):
     """
     Default values of type:
     'TempsAttenteReel' and 'TempOperation'
@@ -941,7 +903,7 @@ def stacked_agent(data,type:str,concern:str,titre="Nombre de type d'opération p
     
     top_categories=df.groupby([f'{concern}'])['Count'].sum().nlargest(53).reset_index()[f'{concern}'].to_list()
     
-    colors = ['#00CC96','#FFA15A',"#EF553B","#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#33FFF0","#FF8333", "#33FF83", "#8C33FF", "#FF3385", "#3385FF",
+    colors = ['#00CC96',"#FFA500","#EF553B","#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#33FFF0","#FF8333", "#33FF83", "#8C33FF", "#FF3385", "#3385FF",
     "#FFBD33", "#33FFBD", "#8CFF33", "#FF33B8", "#33FFCC","#B833FF", "#FF336D", "#3385FF", "#FF8333", "#33A1FF","#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#33FFF0",
     "#FF8333", "#33FF83", "#8C33FF", "#FF3385", "#3385FF","#FFD433", "#33FFD4", "#BD33FF", "#FF33BD", "#33FF99","#FF33B8", "#33A1FF", "#FFBD33", "#33D4FF", "#FF33D4",
     "#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#33FFF0","#FF8333", "#33FF83", "#8C33FF", "#FF3385", "#3385FF"
@@ -956,8 +918,8 @@ def stacked_agent(data,type:str,concern:str,titre="Nombre de type d'opération p
         color=alt.Color(f'{concern}:N', title="Type d'Opération",sort=top_categories,scale=color_scale),
         order=alt.Order(f'Count:N', title="Type d'Opération",sort='descending')  # Ensures the stacking order
     ).properties(
-        width=1000,
-        height=400,
+        width=w,
+        height=h,
         title={
         "text": f"{titre}",
         "anchor": "middle",
@@ -1153,7 +1115,7 @@ def create_pie_chart(df, title):
             labels=top['LabelWithNbs'],
             values=top['Nom'],
             pull=[0.1 if i == 1 else 0 for i in range(len(top))],  # Pull out the second slice ('B')
-            marker=dict(colors = ['#636EFA', '#EF553B', '#00CC96', '#AB63FA','#FFA15A', '#19D3F3', '#FF6692', '#B6E880','#FF97FF', '#FECB52'], line=dict(color='#FFFFFF', width=2)),
+            marker=dict(colors = ['#636EFA', '#EF553B', '#00CC96', '#AB63FA',"#FFA500", '#19D3F3', '#FF6692', '#B6E880','#FF97FF', '#FECB52'], line=dict(color='#FFFFFF', width=2)),
             textinfo='percent' ,textposition= 'inside'
         ))
     #fig = px.pie(top, values='Nom', names='UserName',color_discrete_sequence=['#636EFA', '#EF553B', '#00CC96', '#AB63FA','#FFA15A', '#19D3F3', '#FF6692', '#B6E880','#FF97FF', '#FECB52'], title=f'Personnes {title}s Par Agent')
@@ -1188,32 +1150,6 @@ def create_pie_chart(df, title):
     
 
 
-# def ServiceTable(df_selected,df_queue):
-#     df1=df_selected.copy()
-   
-#     agg1 = df1.groupby(['NomAgence']).agg(
-#     Temps_Moyen_Operation=('TempOperation', lambda x: np.round(np.mean(x)/60)),
-#     Temps_Moyen_Attente=('TempsAttenteReel', lambda x: np.round(np.mean(x)/60)),NombreTraites=('UserName',lambda x: int(sum(x.notna())))
-# ).reset_index()
-    
-#     df2=df_queue.copy()
-    
-#     agg2=df2.groupby(['NomAgence']).agg(NombreTickets=('Date_Reservation', np.count_nonzero),AttenteActuel=("NomAgence",lambda x: current_attente(df2,agence=x.values[0])),TotalMobile=('IsMobile',lambda x: int(sum(x)))).reset_index()
-#     agg=pd.merge(agg1,agg2,on=['NomAgence'],how='left')
-#     agg=agg.rename(columns={'NomAgence':"Nom d'Agence",'Temps_Moyen_Operation':"Temps Moyen d'Operation (MIN)",'Temps_Moyen_Attente':"Temps Moyen d'Attente (MIN)",'NombreTraites':'Total Traités','NombreTickets':'Total Tickets','AttenteActuel':'Nbs de Clients en Attente'})
-#     agg["Period"]=f"Du {df_queue['Date_Reservation'].min().strftime('%Y-%m-%d')} à {df_queue['Date_Reservation'].max().strftime('%Y-%m-%d')}"
-
-#     order=['Period',"Nom d'Agence", "Temps Moyen d'Operation (MIN)", "Temps Moyen d'Attente (MIN)",'Total Tickets','Total Traités','TotalMobile','Nbs de Clients en Attente']
-#     agg=agg[order]
-    
-#     return agg
-
-# def HomeFilter(df_selected,df_queue):
-    
-#     agg=ServiceTable(df_selected,df_queue)
-    
-        
-    # return agg
 def Graphs_bar(df_selected):
     
     
@@ -1333,7 +1269,37 @@ def plot_line_chart(df):
         )
     return fig  
 
-
+def gird_congestion_service(df_selected,df_queue):
+    
+    list_agences=list(df_queue['NomAgence'].unique())
+    num_cols = 4
+    num_agences=len(list_agences)
+    # Créer une grille de figures avec des colonnes dynamiques
+    # Créer les colonnes
+    columns = st.columns(num_cols)
+    # Create the background color style for the column
+    
+    for i in range(num_agences):
+        col_index = i % num_cols
+        with columns[col_index]:
+            st.text(f'{list_agences[i]}')
+            df_agence=df_queue[df_queue['NomAgence']==list_agences[i]]
+            if df_agence.empty:
+                continue
+            list_services=list(df_selected['NomService'].unique())
+            num_service=len(list_services)
+            col = st.columns(max(1,num_service))
+            for j in range(num_service):
+                index = j % num_service
+                service=list_services[j]
+                df_service=df_agence[df_agence['NomService']==service]
+                if df_service.empty:
+                    continue
+                with col[index]:
+                    fig=service_congestion(df_service,label=f"{service}")
+                    st.altair_chart(fig, use_container_width=True)
+                    
+            
 
 def date_range_selection():
     start_date = st.sidebar.date_input(":white[Date Début]")
@@ -1347,12 +1313,110 @@ def date_range_selection():
         st.stop()
         
 
-
+################################################# Service ################################################
 
  
- 
+def ServiceTable(df,status="Traitée"):
+    df1=df.copy()
+    df1=df1[df1["Nom"]==status]
+    agg = df1.groupby(['UserName']).agg(
+    TMO=('TempOperation', lambda x: np.round(np.mean(x)/60).astype(int)),NombreTickets=('Nom','size'),
+TotalMobile=('IsMobile',lambda x: (x==1).sum())).reset_index()
+    
+    
+    return agg
+
+def plot_metrics(df,status,var):
+    agg = ServiceTable(df,status)
+    if agg.empty:
+        
+        Delta = ''
+        st.metric(label=status, value=None, delta=None)
+    else:
+
+        Value = agg[var]
+        Delta = ''
+        st.metric(label=status, value=Value, delta=Delta)
 
 
+def service_congestion(df_queue,color=['#00CC96', '#12783D'],title=False):
+  
+   
+  agence=df_queue["NomAgence"].iloc[0]
+  if not title:
+    title=df_queue["NomService"].iloc[0]
+  
+  HeureFermeture=df_queue['HeureFermeture'].iloc[0]
+  queue_length=current_attente(df_queue,agence,HeureFermeture)
+  #max_length=df_queue['Capacites'].iloc[0]
+  
+#   percentage = (queue_length / max_length) * 100
 
+#   chart_color  = ['#FF0000', '#781F16'] if queue_length >= max_length else (['#FFFFFF', '#D5D5D5']  if percentage ==0 else  
+#         ['#00CC96', '#12783D'] if percentage < 50 else ["#FFA500", '#BF6B3D'] if percentage < 80 else ["#EF553B", '#B03A30']   
+#     )
+  #title='Vide' if chart_color==['#FFFFFF', '#D5D5D5']  else "Modérement occupée" if chart_color==['#00CC96', '#12783D'] else "Fortement occupée" if chart_color==["#FFA500", '#BF6B3D'] else "Très fortement occupée " if chart_color==["#EF553B", '#B03A30'] else 'Congestionnée'
+  
+  input_text="Congestion"
+  input_response=queue_length
+  fig=circle(input_text,input_response,list_2color=color)
+
+  st.markdown(
+    f"""
+    <div style="text-align: center;">
+        <p style="font-size: 20px; font-weight: bold;text-decoration: underline;">{title}</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+#   st.markdown(
+#         f"""
+#         <div style="text-align: center; font-size: 10px;">
+#             <h1>{title}</h1>
+#         </div>
+        
+#         """,
+#         unsafe_allow_html=True
+#     )    
+  
+  
+  return fig
+
+
+def circle(input_text,input_response,list_2color):
+    source = pd.DataFrame({
+      "Topic": ['', input_text],
+      "% value": [100-input_response, input_response]
+  })
+    source_bg = pd.DataFrame({
+        "Topic": ['', input_text],
+        "% value": [100, 0]
+    })
+        
+    plot = alt.Chart(source).mark_arc(innerRadius=45, cornerRadius=25).encode(
+        theta="% value",
+        color= alt.Color("Topic:N",
+                        scale=alt.Scale(
+                            #domain=['A', 'B'],
+                            domain=[input_text, ''],
+                            # range=['#29b5e8', '#155F7A']),  # 31333F
+                            range=list_2color),
+                        legend=None)
+    ).properties(width=130, height=130)
+        
+        
+    text = plot.mark_text(align='center', color="#29b5e8", font="Lato", fontSize=32, fontWeight=700, fontStyle="italic").encode(text=alt.value(f'{input_response}'))
+    plot_bg = alt.Chart(source_bg).mark_arc(innerRadius=45, cornerRadius=20).encode(
+        theta="% value",
+        color= alt.Color("Topic:N",
+                        scale=alt.Scale(
+                            # domain=['A', 'B'],
+                            domain=[input_text, ''],
+                            range=list_2color),  # 31333F
+                        legend=None),
+    ).properties(width=130, height=130)
+
+    return plot_bg + plot + text 
 
 
