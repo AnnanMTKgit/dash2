@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from functions import *
 import base64
-
-
+from query import *
+from sql import *
 # Définir une liste d'utilisateurs et mots de passe valides
 
 
@@ -17,7 +17,7 @@ if 'logged_in' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state.username = None
 
-df_users=profil()
+df_users=profil(SQLQueries().ProfilQueries)
     
 users = dict(zip(df_users['UserName'], df_users['MotDePasse']))
 
@@ -200,7 +200,7 @@ def show_dashboard_page(username):
             fig1=service_congestion(df_queue,color=['#B03A30',"#EF553B"],title='Agence')
             st.altair_chart(fig1,use_container_width=True)
 
-    def option1(df_all,df_queue):
+    def option1(df_all,df_queue,df_RH):
         page1='***Congestion et localisation***'
         page2='***Tableau Global***'
         page3='***Agences & Queue***'
@@ -284,11 +284,11 @@ def show_dashboard_page(username):
             col=st.columns([50,50], gap='medium')
             
             with col[0]:
-                st.plotly_chart(top(df_all,df_queue,title=['Total Tickets','Total Traités'],color=['#00CC96','#FFA15A']),use_container_width=True)
-                st.plotly_chart(top(df_all,df_queue,title=['Total Tickets','Total Rejetées'],color=['#00CC96',"#EF553B"]),use_container_width=True)
+                st.plotly_chart(top_agence_freq(df_all,df_queue,title=['Total Tickets','Total Traités'],color=['#00CC96','#FFA15A']),use_container_width=True)
+                st.plotly_chart(top_agence_freq(df_all,df_queue,title=['Total Tickets','Total Rejetées'],color=['#00CC96',"#EF553B"]),use_container_width=True)
             with col[1]:
-                st.plotly_chart(top(df_all,df_queue,title=['Total Tickets','Total Passées'],color=['#00CC96','orange']),use_container_width=True)
-            # c2.plotly_chart(top(df_all,df_queue,'Total Traités'))
+                st.plotly_chart(top_agence_freq(df_all,df_queue,title=['Total Tickets','Total Passées'],color=['#00CC96','orange']),use_container_width=True)
+            
         elif option ==page7:
             
             # Define the sub-pages
@@ -307,8 +307,8 @@ def show_dashboard_page(username):
                 gird_congestion(df_all, df_queue)
 
             elif sub_option == subpage2:
-                st.subheader("Agency Metrics Overview")
-                # Example: Show some metrics or visualizations related to agencies
+                st.subheader("Point sur les Rendez-vous")
+                #point_rendez_vous(df_RH)
                 
 
             elif sub_option == subpage3:
@@ -415,24 +415,11 @@ def show_dashboard_page(username):
 
     start_date, end_date=date_range_selection()
 
-    current_date = datetime.now().date()
-    current_hour=datetime.now().hour
-        # Vérifier si les dates sont égales à la date actuelle
-    if end_date == current_date and current_hour<18 and current_hour>7:
-        # Forcer le rafraîchissement du cache en utilisant une clé spéciale
+    df=get_sqlData(SQLQueries().AllQueueQueries,start_date, end_date)
         
-        df = get_sqlData(start_date, end_date)
-        
-    else:
-        # Charger les données en utilisant la fonction de mise en cache normale
-        df = get_sqlData_cache(start_date, end_date)
+    df_RH=get_sqlData(SQLQueries().RendezVousQueries,start_date,end_date)
 
-
-
-
-    #df_all,df_queue=get_sqlData(start_date, end_date)
-
-    #df=generate_agence(df)
+    
 
     if len(df)==0:
         
@@ -468,6 +455,7 @@ def show_dashboard_page(username):
             
             if profil in ['Administrateur','SuperAdmin']:
                
+                
                 NomAgence=st.sidebar.multiselect(
                     'Agences',
                     options=df['NomAgence'].unique(),
@@ -514,7 +502,7 @@ def show_dashboard_page(username):
                 
                 #st.subheader(f"Page: {selected}")
                 #Progressbar()
-                option1(df_all,df_queue)
+                option1(df_all,df_queue,df_RH)
             
 
             if selected=="Filtre": # si la somme du Nbs de chaque service != Nbs Total alors UserId n'existe pas

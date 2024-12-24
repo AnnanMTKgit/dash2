@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-from query import *
 import warnings
 warnings.filterwarnings('ignore')
 from streamlit_option_menu import option_menu
@@ -17,8 +16,11 @@ import plotly.io as pio
 import copy
 import altair as alt
 import seaborn as sns
-import random
 import plotly.figure_factory as ff
+import io ##
+from datetime import datetime, timedelta
+from openpyxl.utils import get_column_letter ##
+from openpyxl.worksheet.table import Table, TableStyleInfo ##
 ######################### Global Analysis ####################
 
 
@@ -241,38 +243,6 @@ def stacked_service(data,type:str,concern:str,titre="Nombre de type d'opération
     return chart
 
 
-
-def generate_agence(df):
-
-    
-
-    #new_agencies = [f'Agence_{i+1}' for i in range(num_new_agencies)]
-    d={'Agence Ecobank Ngor':[14.754164, -17.506642],'Ecobank Yoff':[14.759643, -17.467951],
-
-    'Ecobank Sacré Coeur':[14.723065, -17.469012],'Ecobank Maristes':[14.745871, -17.430285],
-
-    'Ecobank Agence Ouakam':[14.724443, -17.487083],'Ecobank de Tilène':[14.683164, -17.446533],
-
-    'Ecobank':[14.724788, -17.442350],'Ecobank Keur Massar':[14.781027, -17.319195],'ECOBANK':[14.708073, -17.437760],
-
-    'Ecobank Hlm':[14.713197, -17.444832],'Ecobank Sénégal':[14.704719, -17.470716],'Ecobank Plateau':[14.672557, -17.432282],
-
-    'EcoBank Sicap':[14.712269, -17.460110],'Ecobank Domaine Industriel':[14.725120, -17.442350]
-
-    }
-    
-    
-    # Update the 'NomAgence' column with new agency names in blocks of 500 rows
-    for i,agency in enumerate(d.keys()):
-        rows_per_agency = random.randint(0, int(len(df)/len(d.keys())))
-        start_index = i * rows_per_agency
-        end_index = start_index + rows_per_agency
-        lat,long=d[agency]
-        df.loc[start_index:end_index, 'NomAgence'] = agency
-        df.loc[start_index:end_index, 'UserName'] = df['UserName'].apply(lambda x: f"{x}_{i+1}" if pd.notna(x) else x)
-        df.loc[start_index:end_index, 'Longitude'] = long
-        df.loc[start_index:end_index, 'Latitude'] =lat
-    return df 
 
 
 def assign_to_bin(date,bins):
@@ -627,7 +597,7 @@ def plot_congestion(df):
     return fig 
 
 def gird_congestion(df_all,df_queue):
-    agg = AgenceTable(df_all,df_queue)
+    _,agg = AgenceTable(df_all,df_queue)
     agg=agg.rename(columns={"Nom d'Agence":'NomAgence','Capacité':'Capacites',"Temps Moyen d'Operation (MIN)":'Temps_Moyen_Operation',"Temps Moyen d'Attente (MIN)":'Temps_Moyen_Attente','Total Traités':'NombreTraites','Total Tickets':'NombreTickets','Nbs de Clients en Attente':'AttenteActuel'})
     list_agences=list(df_queue['NomAgence'].unique())
     num_cols = 3
@@ -655,7 +625,7 @@ def gird_congestion(df_all,df_queue):
 
 def Conjection(df_all,df_queue):
     c1,c2,c3=st.columns([30,55,15])
-    agg = AgenceTable(df_all,df_queue)
+    _,agg= AgenceTable(df_all,df_queue)
     agg=agg.rename(columns={"Nom d'Agence":'NomAgence','Capacité':'Capacites',"Temps Moyen d'Operation (MIN)":'Temps_Moyen_Operation',"Temps Moyen d'Attente (MIN)":'Temps_Moyen_Attente','Total Traités':'NombreTraites','Total Tickets':'NombreTickets','Nbs de Clients en Attente':'AttenteActuel'})
     legend_html, deck =create_map(agg)
     NomAgence = c1.selectbox(
@@ -760,61 +730,150 @@ def GraphsGlob(df_all):
 
 def AgenceTable(df_all,df_queue):
     df1=df_all.copy()
-    agg1 = df1.groupby(['NomAgence', 'Capacites']).agg(
+    df1['Période'] = df1['Date_Reservation'].dt.date
+    agg1 = df1.groupby(['Période','NomAgence', 'Capacites']).agg(
     Temps_Moyen_Operation=('TempOperation', lambda x: np.round(np.mean(x)/60).astype(int)),
     Temps_Moyen_Attente=('TempsAttenteReel', lambda x: np.round(np.mean(x)/60).astype(int)),NombreTraites=('Nom',lambda x: (x == 'Traitée').sum()),NombreRejetee=('Nom',lambda x: (x == 'Rejetée').sum()),NombrePassee=('Nom',lambda x: (x == 'Passée').sum())
 ).reset_index()
     agg1["Temps Moyen de Passage(MIN)"]=agg1['Temps_Moyen_Attente']+agg1['Temps_Moyen_Operation']
     df2=df_queue.copy()
+    df2['Période'] = df2['Date_Reservation'].dt.date
+    agg2=df2.groupby(['Période','NomAgence', 'Capacites','Longitude','Latitude']).agg(NombreTickets=('Date_Reservation', np.count_nonzero),AttenteActuel=("NomAgence",lambda x: current_attente(df2,agence=x.iloc[0],HeureFermeture=df2[df2['NomAgence']==x.iloc[0]]['HeureFermeture'].values[0])),TotalMobile=('IsMobile',lambda x: int(sum(x)))).reset_index()
     
-    agg2=df2.groupby(['NomAgence', 'Capacites','Longitude','Latitude']).agg(NombreTickets=('Date_Reservation', np.count_nonzero),AttenteActuel=("NomAgence",lambda x: current_attente(df2,agence=x.iloc[0],HeureFermeture=df2[df2['NomAgence']==x.iloc[0]]['HeureFermeture'].values[0])),TotalMobile=('IsMobile',lambda x: int(sum(x)))).reset_index()
+    detail=pd.merge(agg2,agg1,on=['Période','NomAgence', 'Capacites'],how='outer')
+
+    ##### Global ###
+    globale=detail.groupby(['NomAgence', 'Capacites','Longitude','Latitude']).agg(
+    Temps_Moyen_Operation=('Temps_Moyen_Operation', lambda x: np.round(np.mean(x)).astype(int)),
+    Temps_Moyen_Attente=('Temps_Moyen_Attente', lambda x: np.round(np.mean(x)).astype(int)),NombreTraites=('NombreTraites',lambda x: x.sum()),NombreRejetee=('NombreRejetee',lambda x: x.sum()),NombrePassee=('NombrePassee',lambda x: x.sum()),
+    TMP=("Temps Moyen de Passage(MIN)", lambda x: np.round(np.mean(x)).astype(int)),
+NombreTickets=('NombreTickets', lambda x: np.sum(x)),AttenteActuel=("AttenteActuel",lambda x: x.sum()),TotalMobile=('TotalMobile',lambda x: int(sum(x)))).reset_index()
+    globale["Période"]=f"{df_queue['Date_Reservation'].min().strftime('%Y-%m-%d')} - {df_queue['Date_Reservation'].max().strftime('%Y-%m-%d')}"
+    globale["Temps Moyen de Passage(MIN)"]=globale['Temps_Moyen_Attente']+globale['Temps_Moyen_Operation']
+    ###########
     
-    agg=pd.merge(agg2,agg1,on=['NomAgence', 'Capacites'],how='outer')
-    agg=agg.rename(columns={'NomAgence':"Nom d'Agence",'Capacites':'Capacité','Temps_Moyen_Operation':"Temps Moyen d'Operation (MIN)",'Temps_Moyen_Attente':"Temps Moyen d'Attente (MIN)",'NombreTraites':'Total Traités','NombreRejetee':'Total Rejetées','NombrePassee':'Total Passées','NombreTickets':'Total Tickets','AttenteActuel':'Nbs de Clients en Attente'})
-    agg["Période"]=f"{df_queue['Date_Reservation'].min().strftime('%Y-%m-%d')} - {df_queue['Date_Reservation'].max().strftime('%Y-%m-%d')}"
-    order=['Période',"Nom d'Agence", "Temps Moyen d'Operation (MIN)", "Temps Moyen d'Attente (MIN)","Temps Moyen de Passage(MIN)",'Capacité','Total Tickets','Total Traités','Total Rejetées','Total Passées','TotalMobile','Nbs de Clients en Attente','Longitude','Latitude']
-    agg=agg[order]
+    new_name={'NomAgence':"Nom d'Agence",'Capacites':'Capacité','Temps_Moyen_Operation':"Temps Moyen d'Operation (MIN)",'Temps_Moyen_Attente':"Temps Moyen d'Attente (MIN)",'NombreTraites':'Total Traités','NombreRejetee':'Total Rejetées','NombrePassee':'Total Passées','NombreTickets':'Total Tickets','AttenteActuel':'Nbs de Clients en Attente'}
+
+
+    detail=detail.rename(columns=new_name)
+    globale=globale.rename(columns=new_name)
     
-    return agg
+
+    # order=['Période',"Nom d'Agence", "Temps Moyen d'Operation (MIN)", "Temps Moyen d'Attente (MIN)","Temps Moyen de Passage(MIN)",'Capacité','Total Tickets','Total Traités','Total Rejetées','Total Passées','TotalMobile','Nbs de Clients en Attente','Longitude','Latitude']
+    # detail=detail[order]
+    # globale=globale[order]
+  
+
+    
+   
+    return detail,globale
+
+
+
+def create_excel_buffer(df, sheet_name="Sheet1"):
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+        # Écrire le DataFrame dans Excel
+        df.to_excel(writer, index=False, sheet_name=sheet_name)
+        worksheet = writer.sheets[sheet_name]
+
+        # Ajuster la largeur des colonnes
+        for col_num, column_title in enumerate(df.columns, start=1):
+            max_length = max(
+                df[column_title].astype(str).map(len).max(),  # Longueur max des données
+                len(column_title)  # Longueur du titre de la colonne
+            )
+            adjusted_width = max_length + 2  # Ajout de marge pour lisibilité
+            worksheet.column_dimensions[get_column_letter(col_num)].width = adjusted_width
+            
+        # Ajouter un style de table
+        table = Table(
+            displayName="Tableau1",
+            ref=worksheet.dimensions  # Dimensions automatiques basées sur les données
+        )
+        style = TableStyleInfo(
+            name="TableStyleMedium9",  # Style prédéfini
+            showFirstColumn=False,
+            showLastColumn=False,
+            showRowStripes=True,  # Bandes alternées
+            showColumnStripes=False
+        )
+        table.tableStyleInfo = style
+        worksheet.add_table(table)
+
+    # Réinitialiser le pointeur du buffer
+    buffer.seek(0)
+    return buffer
+
 
 def HomeGlob(df_all,df_queue):
-    agg=AgenceTable(df_all,df_queue)
+    agg,AGG=AgenceTable(df_all,df_queue)
+    #with st.expander("Agences"):
+    selected_agency=st.multiselect('Agences: ',agg["Nom d'Agence"].unique(),default=agg["Nom d'Agence"].unique())
+    agg=agg[agg["Nom d'Agence"].isin(selected_agency)]
+    AGG=AGG[AGG["Nom d'Agence"].isin(selected_agency)]
     cmap = plt.cm.get_cmap('RdYlGn')
-    capacite=agg['Nbs de Clients en Attente'].values[0]
     
     def tmo_col(val):
-        color = 'background-color: #50C878 ; color: black' if val >= 5 else ''
-        return color
+            color = 'background-color: #50C878 ; color: black' if val >= 5 else ''
+            return color
     def tma_col(val):
         color = 'background-color:#EF553B ; color: black' if val > 15 else ''
         return color
     
+    columns=['Période',"Nom d'Agence", "Temps Moyen d'Operation (MIN)", "Temps Moyen d'Attente (MIN)","Temps Moyen de Passage(MIN)",'Capacité','Total Tickets','Total Traités','TotalMobile']
 
+    agg=agg[columns]
+    AGG=AGG[columns]
 
+    df1=agg.copy()
+    df2=AGG.copy()
+        
+        
 
-    agg=agg[['Période',"Nom d'Agence", "Temps Moyen d'Operation (MIN)", "Temps Moyen d'Attente (MIN)","Temps Moyen de Passage(MIN)",'Capacité','Total Tickets','Total Traités','TotalMobile']]
-    
-    
-
-# Créer un bouton de téléchargement
-
-    st.download_button(
-        label="⬇",
-        data=agg.to_csv(index=False).encode('utf-8'),
-        file_name='data.csv',
-        mime='text/csv'
-    )
     agg=agg.style.set_properties(**{
-    'background-color': "#2E2E2E",
-    'color': 'white',
-})
+        'background-color': "#2E2E2E",
+        'color': 'white',
+    })
     agg=agg.applymap(tmo_col, subset=["Temps Moyen d'Operation (MIN)"])
     agg=agg.applymap(tma_col, subset=["Temps Moyen d'Attente (MIN)"])
-   
+
+    AGG=AGG.style.set_properties(**{
+        'background-color': "#2E2E2E",
+        'color': 'white',
+    })
+    AGG=AGG.applymap(tmo_col, subset=["Temps Moyen d'Operation (MIN)"])
+    AGG=AGG.applymap(tma_col, subset=["Temps Moyen d'Attente (MIN)"])
+
+# Créer un bouton de téléchargement
+    st.markdown(f"<h2 style='color:white; font-size:20px;text-align:center;'>Statistique Journalier par Agence</h2>", unsafe_allow_html=True)
+    
+    buffer1=create_excel_buffer(df1)
+    st.download_button(
+        label="⬇",
+        data=buffer1,
+        file_name='Journalier.xlsx',
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    
+    
     st.markdown(agg.to_html(index=False), unsafe_allow_html=True)
     
 
-
+# Créer un bouton de téléchargement
+    st.markdown(f"<h2 style='color:white; font-size:20px;text-align:center;'>Statistique Globale par Agence</h2>", unsafe_allow_html=True)
+    
+    buffer2=create_excel_buffer(df2)
+    st.download_button(
+        label="⬇",
+        data=buffer2,
+        file_name='Global.xlsx',
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    
+    
+    st.markdown(AGG.to_html(index=False), unsafe_allow_html=True)
+    
     
 
 
@@ -852,8 +911,8 @@ def Top10_Type(df_queue):
     
     return fig
 
-def top(df_all,df_queue,title,color=['#00CC96',"#FFA500"]): 
-    agg=AgenceTable(df_all,df_queue)
+def top_agence_freq(df_all,df_queue,title,color=['#00CC96',"#FFA500"]): 
+    _,agg=AgenceTable(df_all,df_queue)
     agg=agg[["Nom d'Agence",title[0],title[1]]]
     
 
@@ -884,8 +943,26 @@ def top(df_all,df_queue,title,color=['#00CC96',"#FFA500"]):
                   yaxis=dict(title="Nom d'Agence"))
     return fig
 
+def point_rendez_vous(df_RH):
+    df=df_RH.copy()
+    if len(df_RH)!=0 :
+        ##### Global ###
+        df['Date'] = df['HeureReservation'].dt.date
+        agg = df.groupby(['Date']).agg(
+        
+        Temps_Moyen_Attente=('TempAttenteMoyen', lambda x: np.round(np.mean(x)/60).astype(int)),Rendez_Vous_Traites=('Nom',lambda x: (x == 'Traitée').sum()),Rendez_VousRejetee=('Nom',lambda x: (x == 'Rejetée').sum()),Rendez_Vous_Passee=('Nom',lambda x: (x == 'Passée').sum()),RendezVous_en_Attente=('Nom',lambda x: (x == 'En attente').sum()),
+Total_Rendez_Vous=('HeureReservation', np.count_nonzero),TotalMobile=('IsMobile',lambda x: int(sum(x)))).reset_index()
+        
+        
+        
+        new_name={'NomAgence':"Nom d'Agence",'Capacites':'Capacité','Temps_Moyen_Operation':"Temps Moyen d'Operation (MIN)",'Temps_Moyen_Attente':"Temps Moyen d'Attente (MIN)",'Rendez_Vous_Traites':'Rendez-Vous Traités','Rendez_VousRejetee':'Rendez-Vous Rejetées','Rendez_Vous_Passee':'Rendez-Vous Passées','Total_Rendez_Vous':'Total Rendez-Vous','RendezVous_en_Attente':'Rendez-Vous en Attente'}
 
 
+    
+        agg=agg.rename(columns=new_name)
+    
+        return st.dataframe(agg)
+    
 
 
 ######################## Analysis with filter ###################
@@ -1370,15 +1447,7 @@ def service_congestion(df_queue,color=['#00CC96', '#12783D'],title=False):
     unsafe_allow_html=True
 )
 
-#   st.markdown(
-#         f"""
-#         <div style="text-align: center; font-size: 10px;">
-#             <h1>{title}</h1>
-#         </div>
-        
-#         """,
-#         unsafe_allow_html=True
-#     )    
+ 
   
   
   return fig
