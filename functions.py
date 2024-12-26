@@ -915,19 +915,19 @@ def HomeGlob(df_all,df_queue):
     AGG=AGG.applymap(tmo_col, subset=["Temps Moyen d'Operation (MIN)"])
     AGG=AGG.applymap(tma_col, subset=["Temps Moyen d'Attente (MIN)"])
 
-# Créer un bouton de téléchargement
-    st.markdown(f"<h2 style='color:white; font-size:20px;text-align:center;'>Statistique Journalier par Agence</h2>", unsafe_allow_html=True)
+# # Créer un bouton de téléchargement
+#     st.markdown(f"<h2 style='color:white; font-size:20px;text-align:center;'>Statistique Journalier par Agence</h2>", unsafe_allow_html=True)
     
-    buffer1=create_excel_buffer(df1)
-    st.download_button(
-        label="⬇",
-        data=buffer1,
-        file_name='Journalier.xlsx',
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+#     buffer1=create_excel_buffer(df1)
+#     st.download_button(
+#         label="⬇",
+#         data=buffer1,
+#         file_name='Journalier.xlsx',
+#         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+#     )
     
     
-    st.markdown(agg.to_html(index=False), unsafe_allow_html=True)
+#     st.markdown(agg.to_html(index=False), unsafe_allow_html=True)
     
 
 # Créer un bouton de téléchargement
