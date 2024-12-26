@@ -177,3 +177,6 @@ pyrightconfig.json
 
 # Streamlit Secrets file
 secrets.toml
+
+__pycache__/
+*.pyc
