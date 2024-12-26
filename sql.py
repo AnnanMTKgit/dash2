@@ -31,4 +31,24 @@ class SQLQueries:
       
   FROM [dbo].[ReservationParHeure] RPH LEFT JOIN Etat e ON e.Id = RPH.EtatId
   WHERE HeureReservation is not NULL and CAST(HeureReservation AS DATE) BETWEEN CAST(? AS datetime) AND CAST(? AS datetime) 
-  """
+  """ 
+        
+        self.AllAgences=f"""SELECT [Id]
+      ,[NomAgence]
+      ,[Adresse]
+      ,[codeAgence]
+      ,[Pays]
+      ,[RegionId]
+      ,[Longitude]
+      ,[Latitude]
+      ,[StructureID]
+      ,[NbClientByDay]
+      ,[Status]
+      ,[Capacites]
+      ,[Telephone]
+      ,[HeureDemarrage]
+      ,[HeureFermeture]
+      ,[SuspensionActivite]
+      ,[ActivationReservation]
+      ,[nombreLimitReservation]
+  FROM [dbo].[Agence]"""

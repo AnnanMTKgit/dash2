@@ -17,7 +17,7 @@ if 'logged_in' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state.username = None
 
-df_users=profil(SQLQueries().ProfilQueries)
+df_users=get_profil(SQLQueries().ProfilQueries)
     
 users = dict(zip(df_users['UserName'], df_users['MotDePasse']))
 
@@ -48,11 +48,7 @@ def show_login_page():
             st.error("Invalid username or password. Please try again.")
 
 def show_dashboard_page(username):
-
-
-
     
-        
     st.set_page_config(page_title='Dashboard',page_icon='📊',layout='wide')
         #st.sidebar.subheader('BienTableau de Bord de Marlodj 🇸🇳')
     st.sidebar.markdown(
@@ -419,7 +415,7 @@ def show_dashboard_page(username):
         
     df_RH=get_sqlData(SQLQueries().RendezVousQueries,start_date,end_date)
 
-    
+    df_agences=get_profil(SQLQueries().AllAgences)
 
     if len(df)==0:
         
@@ -458,11 +454,14 @@ def show_dashboard_page(username):
                 
                 NomAgence=st.sidebar.multiselect(
                     'Agences',
-                    options=df['NomAgence'].unique(),
-                    default=df['NomAgence'].unique()
+                    options=df_agences['NomAgence'].unique(),
+                    default=df_agences['NomAgence'].unique()
                 )
                 df=df.query('NomAgence==@NomAgence')
-            
+                
+                if df.empty:
+                    st.warning("Pas de données pour cette sélection d'Agence dans cette période")
+                    st.stop()
                 
             else :
                 NomAgence=df_users[df_users['UserName']==username]['NomAgence'].values[0]

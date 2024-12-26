@@ -583,17 +583,27 @@ def plot_congestion(df):
                 'value': queue_length
             }
         },
-        title = {'text': titre[bar_color], 'font': {'size': 20, 'color': bar_color}},  # Increased font size to 24
+        #title = {'text': titre[bar_color], 'font': {'size': 20, 'color': bar_color}},  # Increased font size to 24
         domain = {'x': [0, 1], 'y': [0, 1]}
     ))
     if queue_length > max_length:
         fig.update_traces(number={'valueformat': "d", 'font': {'size': 12}, 'suffix': display_value})
     fig.update_layout(
         height=400,
-        margin=dict(l=30, r=30, t=30, b=30),plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
+        margin=dict(l=30, r=30, t=30, b=50),plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
     xaxis_title='Client(s) en Attente',  # Ajouter le titre de l'axe des X
     xaxis_title_font=dict(size=16, color='white'),  # Définir la taille et la couleur de la police
-    )
+    annotations=[
+        {
+            'text': titre[bar_color],  # Texte du titre
+            'x': 0.5,                 # Position horizontale centrée
+            'y': -0.10,               # Position verticale en dessous de la figure
+            'xref': 'paper',
+            'yref': 'paper',
+            'showarrow': False,
+            'font': {'size': 20, 'color': bar_color}
+        }
+    ])
     return fig 
 
 def gird_congestion(df_all,df_queue):
@@ -729,6 +739,8 @@ def GraphsGlob(df_all):
 
 
 def AgenceTable(df_all,df_queue):
+
+    ########## Journalier ##################
     df1=df_all.copy()
     df1['Période'] = df1['Date_Reservation'].dt.date
     agg1 = df1.groupby(['Période','NomAgence', 'Capacites']).agg(
@@ -742,7 +754,7 @@ def AgenceTable(df_all,df_queue):
     
     detail=pd.merge(agg2,agg1,on=['Période','NomAgence', 'Capacites'],how='outer')
 
-    ##### Global ###
+    ##### Global ############
     globale=detail.groupby(['NomAgence', 'Capacites','Longitude','Latitude']).agg(
     Temps_Moyen_Operation=('Temps_Moyen_Operation', lambda x: np.round(np.mean(x)).astype(int)),
     Temps_Moyen_Attente=('Temps_Moyen_Attente', lambda x: np.round(np.mean(x)).astype(int)),NombreTraites=('NombreTraites',lambda x: x.sum()),NombreRejetee=('NombreRejetee',lambda x: x.sum()),NombrePassee=('NombrePassee',lambda x: x.sum()),
@@ -835,6 +847,7 @@ def HomeGlob(df_all,df_queue):
         'background-color': "#2E2E2E",
         'color': 'white',
     })
+    agg=agg.format("{:.0f}", subset=["Temps Moyen d'Operation (MIN)","Temps Moyen d'Attente (MIN)","Temps Moyen de Passage(MIN)",'Total Tickets','Total Traités'])
     agg=agg.applymap(tmo_col, subset=["Temps Moyen d'Operation (MIN)"])
     agg=agg.applymap(tma_col, subset=["Temps Moyen d'Attente (MIN)"])
 
@@ -842,6 +855,7 @@ def HomeGlob(df_all,df_queue):
         'background-color': "#2E2E2E",
         'color': 'white',
     })
+    AGG=AGG.format("{:.0f}", subset=["Temps Moyen d'Operation (MIN)","Temps Moyen d'Attente (MIN)","Temps Moyen de Passage(MIN)",'Total Tickets','Total Traités'])
     AGG=AGG.applymap(tmo_col, subset=["Temps Moyen d'Operation (MIN)"])
     AGG=AGG.applymap(tma_col, subset=["Temps Moyen d'Attente (MIN)"])
 
