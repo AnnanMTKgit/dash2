@@ -94,7 +94,7 @@ def get_sqlData(sql_requete,start_date, end_date):
     
     return  df
 
-@st.cache_data(hash_funcs={pyodbc.Connection: id}, show_spinner=False)
+#@st.cache_data(hash_funcs={pyodbc.Connection: id}, show_spinner=False)
 def get_profil(sql_requete):
     try:
         connection = pyodbc.connect(connection_string)
