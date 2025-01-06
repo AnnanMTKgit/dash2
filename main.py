@@ -245,11 +245,11 @@ def show_dashboard_page(username):
             
             with col[1]:
                 titre1="Top5 Agences les Plus Lentes en Temps d'Attente"
-                f=area_graph(df_all,concern='NomAgence',time='TempsAttenteReel',date_to_bin='Date_Appel',seuil=15,title=titre1)
+                f,_,_,_=area_graph(df_all,concern='NomAgence',time='TempsAttenteReel',date_to_bin='Date_Appel',seuil=15,title=titre1)
                 st.plotly_chart(f,use_container_width=True)
             
                 titre2="Top5 Agences les Plus Lentes en Temps de d'Operation"
-                f=area_graph(df_all,concern='NomAgence',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title=titre1)
+                f,_,_,_=area_graph(df_all,concern='NomAgence',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title=titre2)
                 st.plotly_chart(f,use_container_width=True)
         elif option == page6:
         
@@ -288,7 +288,16 @@ def show_dashboard_page(username):
                 st.subheader("Pas de données")
             
             elif sub_option == subpage4:
-                combined_area_graph(df_all)
+                col=st.columns((0.25, 4, 0.25), gap='medium')
+            
+                with col[1]:
+                    titre1="Evolution du Temps d'Attente par Agence"
+                    f,_,_,_=area_graph(df_all,concern='NomAgence',time='TempsAttenteReel',date_to_bin='Date_Appel',seuil=15,title=titre1)
+                    st.plotly_chart(f,use_container_width=True)
+                
+                    titre2="Evolution du Temps d'Operation par Agence"
+                    f,_,_,_=area_graph(df_all,concern='NomAgence',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title=titre2)
+                    st.plotly_chart(f,use_container_width=True)
             
     
 

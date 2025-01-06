@@ -470,7 +470,7 @@ def combined_area_graph(df_all):
             x=trace.x,
             y=trace.y,
             mode=trace.mode,
-            name=f"{trace.name} (Temps Operation)",  # Ajout d'une étiquette pour identifier les figures
+            name=f"{trace.name} (Temps Opération)",  # Ajout d'une étiquette pour identifier les figures
             fill=trace.fill,
             line=trace.line,  # Conserve le style de ligne
             marker=trace.marker  # Conserve les marqueurs si présents
@@ -493,19 +493,27 @@ def combined_area_graph(df_all):
         x1=b2,  # Fin de la ligne sur l'axe x
         y0=seuil2,  # Position de la ligne sur l'axe y
         y1=seuil2,  # Même que y0 pour que la ligne soit horizontale
-        line=dict(color="violet", width=2, dash="dot")  # Couleur différente (ici, noir)
+        line=dict(color="white", width=2, dash="dot")  # Couleur différente (ici, noir)
     )
     
 
 
     # Personnaliser le layout si nécessaire
    fig_combined.update_layout(
-        title="Evolution des Temps",
+        title={
+        'text': "Evolution des Temps",
+        'x': 0.5,  # Centers the title horizontally
+        'xanchor': 'center',  # Ensures proper alignment
+        'yanchor': 'top'  # Aligns the title vertically
+    },
         xaxis_title="Interval de Temps",
         yaxis_title="Durée",
         legend_title="Légende",
-        template="plotly_dark" # Modifier ou supprimer selon le thème souhaité
-    )
+        template="plotly_dark", # Modifier ou supprimer selon le thème souhaité
+    yaxis=dict(
+        tickmode="linear",    # Mode de graduation linéaire
+        dtick=30
+    ))
 
     # Afficher le graphique combiné
    st.plotly_chart(fig_combined, use_container_width=True)
@@ -855,6 +863,7 @@ def Conjection(df_all,df_queue):
     if queue_length > max_length:
         fig.update_traces(number={'valueformat': "d", 'font': {'size': 12}, 'suffix': display_value})
     fig.update_layout(
+        autosize=True,
         height=280,
         margin=dict(l=30, r=30, t=30, b=20),plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
     xaxis_title='Client(s) en Attente',  # Ajouter le titre de l'axe des X
