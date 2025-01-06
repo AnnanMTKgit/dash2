@@ -205,33 +205,8 @@ def show_dashboard_page(username):
         page6="***Agences Plus Fréquentées***"
         page7="***Supervision des Agences***"
         pages = [page1,page2,page3,page4,page5 ,page6,page7]
-        st.markdown(
-        """
-        <style>
-        /* Style général pour les labels */
-        div[role='radiogroup'] {
-            display: flex;
-            flex-direction: row;  /* Disposer les labels horizontalement */
-            flex-wrap: nowrap;    /* Empêcher le retour à la ligne */
-        }
-        div[role='radiogroup'] label {
-            display: flex;
-            padding: 3px;
-            border: 2px solid #444;
-            border-radius: 5px;
-            background-color: #2E2E2E;  /* Couleur de fond normale (gris) */
-            transition: background-color 0.3s ease;
-            white-space: normal;  /* Autoriser le retour à la ligne */
-            
-        }
-        /* Style au survol des labels */
-        div[role='radiogroup'] label:click {
-            background-color: #a9a9a9;  /* Couleur au survol (gris foncé) */
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+        with open("stylelabels.css") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
         option=st.radio(label=' ',options=pages,horizontal=True)
         
         st.markdown("<br><br>", unsafe_allow_html=True)
@@ -248,11 +223,11 @@ def show_dashboard_page(username):
             col=st.columns((0.25, 4, 0.25), gap='medium')
             with col[1]:
                 chart1=stacked_chart(df_all,'TempsAttenteReel','NomAgence',"Catégorisation du Temps d'Attente")
-                st.altair_chart(chart1)
+                st.altair_chart(chart1,use_container_width=True)
                 chart2=stacked_chart(df_all,'TempOperation','NomAgence',"Catégorisation du Temps d'Opération")
-                st.altair_chart(chart2)
+                st.altair_chart(chart2,use_container_width=True)
                 chart3=TempsPassage(df_all)
-                st.altair_chart(chart3)
+                st.altair_chart(chart3,use_container_width=True)
         elif option == page4:
             col=st.columns([50,50], gap='medium')
             
@@ -270,10 +245,12 @@ def show_dashboard_page(username):
             
             with col[1]:
                 titre1="Top5 Agences les Plus Lentes en Temps d'Attente"
-                st.plotly_chart(area_graph(df_all,concern='NomAgence',time='TempsAttenteReel',date_to_bin='Date_Appel',seuil=15,title=titre1),use_container_width=True)
+                f=area_graph(df_all,concern='NomAgence',time='TempsAttenteReel',date_to_bin='Date_Appel',seuil=15,title=titre1)
+                st.plotly_chart(f,use_container_width=True)
             
                 titre2="Top5 Agences les Plus Lentes en Temps de d'Operation"
-                st.plotly_chart(area_graph(df_all,concern='NomAgence',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title=titre2),use_container_width=True)
+                f=area_graph(df_all,concern='NomAgence',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title=titre1)
+                st.plotly_chart(f,use_container_width=True)
         elif option == page6:
         
             st.markdown(f"<h2 style='color:white; font-size:20px;text-align:center;'>Top5 Agences les plus Fréquentées</h2>", unsafe_allow_html=True)
@@ -289,10 +266,10 @@ def show_dashboard_page(username):
             
             # Define the sub-pages
             subpage1 = 'Monitoring Congestion'
-            subpage2 = 'Point sur les rendez-vous'
-            subpage3 = 'Opérations en attentes'
-
-            sub_pages = [subpage1, subpage2, subpage3]
+            subpage2 = 'Opération sur Rendez-vous'
+            subpage3 = 'Opérations mises en attente'
+            subpage4= "Evolution des temps dans la journée"
+            sub_pages = [subpage1, subpage2, subpage3, subpage4]
 
             # Create a selectbox or radio button for the sub-pages
             sub_option = st.radio(label="", options=sub_pages, horizontal=True)
@@ -303,13 +280,15 @@ def show_dashboard_page(username):
                 gird_congestion(df_all, df_queue)
 
             elif sub_option == subpage2:
-                st.subheader("Point sur les Rendez-vous")
+                st.subheader("Pas de données")
                 #point_rendez_vous(df_RH)
                 
 
             elif sub_option == subpage3:
-                st.subheader("Detailed Reports")
+                st.subheader("Pas de données")
             
+            elif sub_option == subpage4:
+                combined_area_graph(df_all)
             
     
 
@@ -334,32 +313,11 @@ def show_dashboard_page(username):
 
         pages = [page1,page2,page3,page4,page5]
         # Injecter du CSS personnalisé
-        st.markdown(
-        """
-        <style>
-        /* Style général pour les labels */
-        div[role='radiogroup'] {
-            display: flex;
-            flex-direction: row;  /* Disposer les labels horizontalement */
-            flex-wrap: nowrap;    /* Empêcher le retour à la ligne */
+        with open("stylelabels.css") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+        option=st.radio(label=' ',options=pages,horizontal=True)
         
-        }
-        div[role='radiogroup'] label {
-            padding: 3px;
-            border: 2px solid #444;
-            border-radius: 5px;
-            background-color: #2E2E2E;  /* Couleur de fond normale (gris) */
-            transition: background-color 0.3s ease;
-        }
-        /* Style au survol des labels */
-        div[role='radiogroup'] label:click {
-            background-color: #a9a9a9;  /* Couleur au survol (gris foncé) */
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-        option=st.radio(label='',options=pages)
+        
         st.markdown("<br><br>", unsafe_allow_html=True)
         
 

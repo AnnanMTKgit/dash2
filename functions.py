@@ -440,7 +440,75 @@ def area_graph(data,concern='UserName',time='TempOperation',date_to_bin='Date_Fi
     )
     
     # Display the chart in Streamlit
-    return fig
+    return fig,a,b,seuil
+
+def combined_area_graph(df_all):
+   fig1,a1,b1,seuil1= area_graph(df_all,concern='NomAgence',time='TempsAttenteReel',date_to_bin='Date_Appel',seuil=15,title="Evolution Temps en Attente")
+   fig2,a2,b2,seuil2=area_graph(df_all,concern='NomAgence',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title="Evolution Temps d'Operation")
+   # Créer une nouvelle figure
+   # Créer une nouvelle figure
+   fig_combined = go.Figure()
+   
+   # Ajouter toutes les traces de fig1 avec leur style original
+   for trace in fig1.data:
+    fig_combined.add_trace(
+        go.Scatter(
+            x=trace.x,
+            y=trace.y,
+            mode=trace.mode,
+            name=f"{trace.name} (Temps d'attente)",  # Ajout d'une étiquette pour identifier les figures
+            fill=trace.fill,
+            line=trace.line,  # Conserve le style de ligne
+            marker=trace.marker  # Conserve les marqueurs si présents
+        )
+    )
+
+    # Ajouter toutes les traces de fig2 avec leur style original
+   for trace in fig2.data:
+    fig_combined.add_trace(
+        go.Scatter(
+            x=trace.x,
+            y=trace.y,
+            mode=trace.mode,
+            name=f"{trace.name} (Temps Operation)",  # Ajout d'une étiquette pour identifier les figures
+            fill=trace.fill,
+            line=trace.line,  # Conserve le style de ligne
+            marker=trace.marker  # Conserve les marqueurs si présents
+        )
+    )
+
+    fig_combined.add_shape(
+        type="line",
+        x0=a1,  # Début de la ligne sur l'axe x
+        x1=b1,  # Fin de la ligne sur l'axe x
+        y0=seuil1,  # Position de la ligne sur l'axe y
+        y1=seuil1,  # Même que y0 pour que la ligne soit horizontale
+        line=dict(color="yellow", width=2, dash="dot")  # Couleur différente (ici, noir)
+    )
+    
+
+    fig_combined.add_shape(
+        type="line",
+        x0=a2,  # Début de la ligne sur l'axe x
+        x1=b2,  # Fin de la ligne sur l'axe x
+        y0=seuil2,  # Position de la ligne sur l'axe y
+        y1=seuil2,  # Même que y0 pour que la ligne soit horizontale
+        line=dict(color="violet", width=2, dash="dot")  # Couleur différente (ici, noir)
+    )
+    
+
+
+    # Personnaliser le layout si nécessaire
+   fig_combined.update_layout(
+        title="Evolution des Temps",
+        xaxis_title="Interval de Temps",
+        yaxis_title="Durée",
+        legend_title="Légende",
+        template="plotly_dark" # Modifier ou supprimer selon le thème souhaité
+    )
+
+    # Afficher le graphique combiné
+   st.plotly_chart(fig_combined, use_container_width=True)
 
 def current_attente(df_queue,agence,HeureFermeture=None):
     current_date = datetime.now().date()
@@ -674,7 +742,7 @@ def gird_congestion(df_all,df_queue):
     """,
     unsafe_allow_html=True
 )     
-
+    
     # Créer les colonnes
     columns = st.columns(num_cols)
 
@@ -685,8 +753,25 @@ def gird_congestion(df_all,df_queue):
             df=agg[agg['NomAgence']==list_agences[i]]
             fig = plot_congestion(df)
             st.plotly_chart(fig, use_container_width=True)
+            
+            with open("styleblock.css") as f:
+                st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+            HeureFermeture=df_queue['HeureFermeture'].iloc[0]
+            queue_length=current_attente(df_queue,list_agences[i],HeureFermeture)
+            nomService=list(df_queue['NomService'].unique())
+            queue_length_service={f'{j}':f"{current_attente(df_queue[df_queue['NomService']==j],list_agences[i],HeureFermeture)}" for j in nomService}
+            df_queue_length_service = pd.DataFrame.from_dict(queue_length_service, orient='index', columns=['Client en Attente'])
 
+            # Reset index to make the keys a column if needed
+            df_queue_length_service.reset_index(inplace=True)
+            df_queue_length_service.rename(columns={'index': 'Service'}, inplace=True)
+            c=columns[col_index].columns(len(df_queue_length_service))
+            for i,nom in enumerate(nomService):
+                Value = queue_length_service[nom]
+                Delta = ''
+                c[i].metric(label=nom, value=Value, delta=Delta)
 def Conjection(df_all,df_queue):
+    
     c1,c2,c3=st.columns([30,55,15])
     _,agg= AgenceTable(df_all,df_queue)
     agg=agg.rename(columns={"Nom d'Agence":'NomAgence','Capacité':'Capacites',"Temps Moyen d'Operation (MIN)":'Temps_Moyen_Operation',"Temps Moyen d'Attente (MIN)":'Temps_Moyen_Attente','Total Traités':'NombreTraites','Total Tickets':'NombreTickets','Nbs de Clients en Attente':'AttenteActuel'})
@@ -708,6 +793,22 @@ def Conjection(df_all,df_queue):
     with c3:
         c3.write('Legend')
         c3.markdown(legend_html, unsafe_allow_html=True)
+
+    HeureFermeture=df_queue['HeureFermeture'].iloc[0]
+    queue_length=current_attente(df_queue,NomAgence,HeureFermeture)
+    nomService=list(df_queue['NomService'].unique())
+    queue_length_service={f'{i}':f"{current_attente(df_queue[df_queue['NomService']==i],NomAgence,HeureFermeture)}" for i in nomService}
+    # Convert the dictionary to a dataframe
+    df_queue_length_service = pd.DataFrame.from_dict(queue_length_service, orient='index', columns=['Client en Attente'])
+
+    # Reset index to make the keys a column if needed
+    df_queue_length_service.reset_index(inplace=True)
+    df_queue_length_service.rename(columns={'index': 'Service'}, inplace=True)
+
+    
+    
+
+
     max_length=df['Capacites'].values[0]
     queue_length=df['AttenteActuel'].values[0]
     
@@ -754,15 +855,25 @@ def Conjection(df_all,df_queue):
     if queue_length > max_length:
         fig.update_traces(number={'valueformat': "d", 'font': {'size': 12}, 'suffix': display_value})
     fig.update_layout(
-        height=400,
-        margin=dict(l=30, r=30, t=30, b=30),plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
+        height=280,
+        margin=dict(l=30, r=30, t=30, b=20),plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
     xaxis_title='Client(s) en Attente',  # Ajouter le titre de l'axe des X
-    xaxis_title_font=dict(size=16, color='white'),  # Définir la taille et la couleur de la police
-    )
+    # xaxis_title_font=dict(size=16, color='white'),  # Définir la taille et la couleur de la police
+     )
     
     
     c1.plotly_chart(fig,use_container_width=True)
-
+    
+    with c1:
+        # Load CSS file
+        with open("styleblock.css") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+        c=c1.columns(len(df_queue_length_service))
+        for i,nom in enumerate(nomService):
+            Value = queue_length_service[nom]
+            Delta = ''
+            c[i].metric(label=nom, value=Value, delta=Delta)
+    #c1.dataframe(df_queue_length_service,use_container_width=True)
         
         
         
@@ -785,7 +896,12 @@ def GraphsGlob(df_all):
     )))
 
 
-    fig_tempOp_1.update_layout(title= f"Temps Moyen d'Opération par Type de Service",
+    fig_tempOp_1.update_layout(title={
+        'text': "Temps Moyen d'Opération par Type de Service",
+        'x': 0.5,  # Centers the title horizontally
+        'xanchor': 'center',  # Ensures proper alignment
+        'yanchor': 'top'  # Aligns the title vertically
+    },
         xaxis=(dict(tickmode='linear')),width=400,height=400,
         plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
                              yaxis=(dict(title='Temps (min)',showgrid=False)))
@@ -975,7 +1091,12 @@ def Top10_Type(df_queue):
         textposition='inside',showlegend=False,textfont=dict(color='black'),marker=dict(color='#00CC96'))
         ))
 
-    fig.update_layout(title=f"Top 10 Type d'Opération en nombre de clients",plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
+    fig.update_layout(title={
+        'text': "Top 10 Type d'Opération en nombre de clients",
+        'x': 0.5,  # Centers the title horizontally
+        'xanchor': 'center',  # Ensures proper alignment
+        'yanchor': 'top'  # Aligns the title vertically
+    },plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
                   xaxis=dict(title='Nombre de Clients',tickfont=dict(size=10)),width=400,height=400,margin=dict(l=150, r=50, t=50, b=150),
                   yaxis=dict(title='Type'))
     
@@ -1219,13 +1340,14 @@ def create_bar_chart(df, status, title):
         
     fig.update_layout(
     title={
-        'text': f'Temps Moyen Opération {status}',
+        'text': f'Temps Moyen<br>Opération {status}',  # Utilisez <br> pour gérer la coupure en ligne
         'x': 0.5,  # Center the title
         'xanchor': 'center',
              'font': {
             'color': 'white'  # Set your desired color
         }
         },
+        margin={'t': 60},
     xaxis_title='Temps en minutes',
     yaxis_title='Agents',
     font=dict(
@@ -1272,7 +1394,7 @@ def create_pie_chart(df, title):
     # Update layout for aesthetics
     fig.update_layout(
         title={
-        'text': f'Personnes {title}s Par Agent',
+        'text': f'Personnes {title}s<br>Par Agent',
         'x': 0.5,  # Center the title
         'xanchor': 'center',
              'font': {
@@ -1445,6 +1567,7 @@ def gird_congestion_service(df_selected,df_queue):
                 with col[index]:
                     fig=service_congestion(df_service,label=f"{service}")
                     st.altair_chart(fig, use_container_width=True)
+                    
                     
             
 
