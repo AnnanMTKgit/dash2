@@ -1,24 +1,52 @@
-/* Style général pour les labels */
+/* Style du conteneur des labels */
 div[role='radiogroup'] {
-    display: flex;
-    flex-direction: row;  /* Disposer les labels horizontalement */
-   flex-wrap: wrap;    /* Empêcher le retour à la ligne */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Colonnes flexibles */
+    gap: 10px;
+    width: 100%;
 }
+
+/* Style général pour les labels */
 div[role='radiogroup'] label {
     display: flex;
-    padding: 3px;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
     border: 2px solid #444;
     border-radius: 5px;
-    background-color: #2E2E2E;  /* Couleur de fond normale (gris) */
-    transition: background-color 0.3s ease;
-    white-space: normal;  /* Autoriser le retour à la ligne */
-    cursor: pointer;        /* Indiquer que l'élément est interactif */
-    min-width: 120px;       /* Largeur minimale pour un bon alignement */
-    flex: 1 1 120px;        /* Permet de s'adapter dynamiquement */
-    width: 150px; 
-    box-sizing: border-box; /* Inclure le padding et la bordure dans la largeur */
+    background-color: #2E2E2E;
+    color: white;
+    cursor: pointer;
+    box-sizing: border-box;
+    height: 100%;
+    position: relative; /* Positionnement relatif pour le tooltip */
 }
+
+/* Style du tooltip (masqué par défaut) */
+div[role='radiogroup'] label::after {
+    content: attr(data-tooltip); /* Récupère la valeur de data-tooltip */
+    position: absolute;
+    bottom: 100%; /* Positionne le tooltip juste au-dessus */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #444;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    opacity: 0; /* Tooltip masqué par défaut */
+    pointer-events: none; /* Le tooltip ne peut pas interagir avec la souris */
+    white-space: nowrap; /* Pas de retour à la ligne */
+    transition: opacity 0.3s ease; /* Effet de transition lors de l'apparition */
+    z-index: 10;
+}
+
+/* Affiche le tooltip au survol du label */
+div[role='radiogroup'] label:hover::after {
+    opacity: 1; /* Rendre visible le tooltip */
+}
+
 /* Style au survol des labels */
-div[role='radiogroup'] label:click {
-    background-color: #a9a9a9;  /* Couleur au survol (gris foncé) */
+div[role='radiogroup'] label:hover {
+    background-color: #3c3c3c; /* Changer la couleur de fond au survol */
 }

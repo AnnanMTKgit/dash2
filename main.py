@@ -65,9 +65,9 @@ def show_dashboard_page(username):
 
     # Use a container with columns to center the image
     with placeholder.container():
-        col1, col2, col3 = st.sidebar.columns([1, 3, 1])  # Adjust the proportions as needed
+        col1, col2, col3 = st.sidebar.columns([1, 2, 1])  # Adjust the proportions as needed
         with col2:
-            st.image('logo.png', caption="", width=150)
+            st.image('logo.png', caption="", width=100)
     
     
     def option_agent(df_all_service,df_queue_service):
@@ -248,7 +248,7 @@ def show_dashboard_page(username):
                 f,_,_,_=area_graph(df_all,concern='NomAgence',time='TempsAttenteReel',date_to_bin='Date_Appel',seuil=15,title=titre1)
                 st.plotly_chart(f,use_container_width=True)
             
-                titre2="Top5 Agences les Plus Lentes en Temps de d'Operation"
+                titre2="Top5 Agences les Plus Lentes en Temps d'Operation"
                 f,_,_,_=area_graph(df_all,concern='NomAgence',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title=titre2)
                 st.plotly_chart(f,use_container_width=True)
         elif option == page6:
@@ -375,7 +375,12 @@ def show_dashboard_page(username):
 
 
 
-
+    # Add a logout button
+    if st.sidebar.button("Déconnexion"):
+        # Clear session state and rerun the app to go back to login page
+        st.session_state.logged_in = False
+        st.session_state.username = None
+        st.experimental_rerun()
     start_date, end_date=date_range_selection()
 
     df=get_sqlData(SQLQueries().AllQueueQueries,start_date, end_date)
@@ -447,6 +452,11 @@ def show_dashboard_page(username):
             if 'selected_option' not in st.session_state:
                 st.session_state['selected_option'] = "GFA Global"
             with st.sidebar:
+                
+
+                
+
+
                 selected=option_menu(
                     menu_title="",
                     options=["GFA Global","Filtre"],
@@ -479,12 +489,7 @@ def show_dashboard_page(username):
                 else:
                     option2(df_selected,df_queue)
 
-            # Add a logout button
-            if st.sidebar.button("Déconnexion"):
-                # Clear session state and rerun the app to go back to login page
-                st.session_state.logged_in = False
-                st.session_state.username = None
-                st.experimental_rerun()
+            
 
 
 
