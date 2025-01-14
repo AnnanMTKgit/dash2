@@ -1,52 +1,66 @@
-/* Style du conteneur des labels */
+/* Conteneur principal */
 div[role='radiogroup'] {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Colonnes flexibles */
-    gap: 10px;
-    width: 100%;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Colonnes flexibles */
+    gap: 0; /* Pas d'espacement fixe ici */
+    justify-content: space-between; /* Espacement dynamique entre les blocs */
+    width: 100%; /* Assure que le conteneur utilise tout l'espace disponible */
 }
 
-/* Style général pour les labels */
+/* Style général des labels */
 div[role='radiogroup'] label {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px;
-    border: 2px solid #444;
-    border-radius: 5px;
-    background-color: #2E2E2E;
-    color: white;
-    cursor: pointer;
-    box-sizing: border-box;
-    height: 100%;
-    position: relative; /* Positionnement relatif pour le tooltip */
+    align-items: center;       /* Centrer verticalement le contenu */
+    justify-content: center;   /* Centrer horizontalement le contenu */
+    padding: 8px;              /* Espacement interne */
+    border: 2px solid #444;    /* Bordure */
+    border-radius: 5px;        /* Coins arrondis */
+    background-color: #2E2E2E; /* Couleur de fond normale */
+    color: white;              /* Couleur du texte */
+    cursor: pointer;           /* Indique que l'élément est interactif */
+    text-align: center;        /* Centrer le texte */
+    box-sizing: border-box;    /* Inclure le padding et la bordure dans la largeur */
+    height: 100%;              /* Étire les blocs pour qu'ils aient tous la même hauteur */
+    min-width: 150px;          /* Largeur minimale pour chaque bloc */
+    flex: 1;                   /* Étire les blocs pour occuper l'espace horizontal disponible */
 }
 
-/* Style du tooltip (masqué par défaut) */
+
+/* Tooltip */
 div[role='radiogroup'] label::after {
-    content: attr(data-tooltip); /* Récupère la valeur de data-tooltip */
+    content: attr(data-tooltip); /* Récupérer le contenu du tooltip */
     position: absolute;
-    bottom: 100%; /* Positionne le tooltip juste au-dessus */
+    bottom: 100%; /* Afficher au-dessus du bloc */
     left: 50%;
     transform: translateX(-50%);
-    background-color: #444;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 5px;
-    font-size: 12px;
-    opacity: 0; /* Tooltip masqué par défaut */
-    pointer-events: none; /* Le tooltip ne peut pas interagir avec la souris */
-    white-space: nowrap; /* Pas de retour à la ligne */
-    transition: opacity 0.3s ease; /* Effet de transition lors de l'apparition */
-    z-index: 10;
+    background-color: #444; /* Couleur de fond du tooltip */
+    color: white;           /* Couleur du texte */
+    padding: 5px 10px;      /* Espacement interne du tooltip */
+    border-radius: 5px;     /* Coins arrondis */
+    white-space: nowrap;    /* Empêcher le retour à la ligne */
+    font-size: 12px;        /* Taille de police du tooltip */
+    opacity: 0;             /* Rendre invisible par défaut */
+    pointer-events: none;   /* Ignorer les interactions */
+    transition: opacity 0.2s ease; /* Transition fluide */
+    z-index: 10;            /* Placer au-dessus des autres éléments */
 }
 
-/* Affiche le tooltip au survol du label */
-div[role='radiogroup'] label:hover::after {
-    opacity: 1; /* Rendre visible le tooltip */
-}
 
-/* Style au survol des labels */
+/* Style au survol */
 div[role='radiogroup'] label:hover {
-    background-color: #3c3c3c; /* Changer la couleur de fond au survol */
+    background-color: #3E3E3E; /* Couleur de fond au survol */
+    transform: scale(1.05);    /* Mise en avant légère */
+    transition: transform 0.3s ease, background-color 0.3s ease; /* Transition fluide */
+}
+
+/* Style pour l'élément sélectionné */
+div[role='radiogroup'] input[type="radio"]:checked + label {
+    background-color: #444;    /* Couleur différente pour l'élément sélectionné */
+    border-color: #888;        /* Bordure plus claire */
+    font-weight: bold;         /* Texte en gras */
+}
+
+/* Masquer les boutons radio natifs */
+div[role='radiogroup'] input[type="radio"] {
+    display: none;
 }

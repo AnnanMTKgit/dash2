@@ -205,21 +205,46 @@ def show_dashboard_page(username):
         page6="***Agences Plus Fréquentées***"
         page7="***Supervision des Agences***"
         pages = [page1,page2,page3,page4,page5 ,page6,page7]
-        with open("stylelabels.css") as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-        option=st.radio(label=' ',options=pages,horizontal=True)
         
-        st.markdown("<br><br>", unsafe_allow_html=True)
+        
 
-        # Afficher le contenu en fonction de la sélection
-        if option == page1:
-            
+        if "selected_page" not in st.session_state:
+            st.session_state.selected_page = page1 # Par défaut, Page 1 est sélectionnée
+        
+        with open("stylebutton.css", "r") as css_file:
+            st.markdown(f"<style>{css_file.read()}</style>", unsafe_allow_html=True)
+        st.markdown('<div class="button-container">', unsafe_allow_html=True)
+        # Créer trois colonnes pour les boutons
+        col1, col2, col3,col4,col5,col6,col7 = st.columns(7)
+
+        with col1:
+            if st.button(page1, help='Afficher les données sur la congestion et la localisation.',use_container_width=True):
+                st.session_state.selected_page = page1
+        with col2:
+            if st.button(page2, help='Résumé global des données.',use_container_width=True):
+                st.session_state.selected_page =page2
+        with col3:
+            if st.button(page3, help="Analyse des agences et files d'attente.",use_container_width=True):
+                st.session_state.selected_page = page3
+
+        with col4:
+            if st.button(page4, help="Statistiques des temps moyens par type d'opération.",use_container_width=True):
+                st.session_state.selected_page = page4
+        with col5:
+            if st.button(page5, help="Classement des agences avec le temps d'opération le plus lent.",use_container_width=True):
+                st.session_state.selected_page = page5
+        with col6:
+            if st.button(page6, help="Les agences ayant le plus grand nombre de visites.",use_container_width=True):
+                st.session_state.selected_page = page6
+        with col7:
+            if st.button(page7, help="Outil pour surveiller les performances des agences.",use_container_width=True):
+                st.session_state.selected_page = page7
+        # Afficher le contenu de la page sélectionnée
+        if st.session_state.selected_page == page1:
             Conjection(df_all,df_queue)
-
-        elif option ==page2:
-            
+        elif st.session_state.selected_page ==page2:
             HomeGlob(df_all,df_queue)
-        elif option==page3:
+        elif st.session_state.selected_page == page3:
             col=st.columns((0.25, 4, 0.25), gap='medium')
             with col[1]:
                 chart1=stacked_chart(df_all,'TempsAttenteReel','NomAgence',"Catégorisation du Temps d'Attente")
@@ -228,7 +253,8 @@ def show_dashboard_page(username):
                 st.altair_chart(chart2,use_container_width=True)
                 chart3=TempsPassage(df_all)
                 st.altair_chart(chart3,use_container_width=True)
-        elif option == page4:
+
+        elif st.session_state.selected_page == page4:
             col=st.columns([50,50], gap='medium')
             
             plot_and_download(col[0],GraphsGlob(df_all),'1')
@@ -239,8 +265,7 @@ def show_dashboard_page(username):
             
             plot_and_download(col[1],Top10_Type(df_queue),'2')
 
-
-        elif option == page5:
+        elif st.session_state.selected_page == page5:
             col=st.columns((0.25, 4, 0.25), gap='medium')
             
             with col[1]:
@@ -250,9 +275,9 @@ def show_dashboard_page(username):
             
                 titre2="Top5 Agences les Plus Lentes en Temps d'Operation"
                 f,_,_,_=area_graph(df_all,concern='NomAgence',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title=titre2)
-                st.plotly_chart(f,use_container_width=True)
-        elif option == page6:
-        
+                st.plotly_chart(f,use_container_width=True)  
+
+        elif st.session_state.selected_page == page6:
             st.markdown(f"<h2 style='color:white; font-size:20px;text-align:center;'>Top5 Agences les plus Fréquentées</h2>", unsafe_allow_html=True)
             col=st.columns([50,50], gap='medium')
             
@@ -261,33 +286,51 @@ def show_dashboard_page(username):
                 st.plotly_chart(top_agence_freq(df_all,df_queue,title=['Total Tickets','Total Rejetées'],color=['#00CC96',"#EF553B"]),use_container_width=True)
             with col[1]:
                 st.plotly_chart(top_agence_freq(df_all,df_queue,title=['Total Tickets','Total Passées'],color=['#00CC96','orange']),use_container_width=True)
-            
-        elif option ==page7:
-            
-            # Define the sub-pages
+        
+        elif st.session_state.selected_page == page7:
+             # Define the sub-pages
             subpage1 = 'Monitoring Congestion'
             subpage2 = 'Opération sur Rendez-vous'
             subpage3 = 'Opérations mises en attente'
             subpage4= "Evolution des temps dans la journée"
             sub_pages = [subpage1, subpage2, subpage3, subpage4]
 
-            # Create a selectbox or radio button for the sub-pages
-            sub_option = st.radio(label="", options=sub_pages, horizontal=True)
+            if "selected_page" not in st.session_state:
+                st.session_state.selected_page = subpage1 # Par défaut, Page 1 est sélectionnée
+        
+
+            st.markdown('<div class="button-container">', unsafe_allow_html=True)
+            # Créer trois colonnes pour les boutons
+            col1, col2, col3,col4 = st.columns(4)
+            
+            with col1:
+                if st.button(subpage1, help="Cliquez pour voir le contenu de la page 1"):
+                    st.session_state.selected_page = subpage1
+            with col2:
+                if st.button(subpage2, help="Cliquez pour voir le contenu de la page 2"):
+                    st.session_state.selected_page =subpage2
+            with col3:
+                if st.button(subpage3, help="Cliquez pour voir le contenu de la page 3"):
+                    st.session_state.selected_page = subpage3
+            with col4:
+                if st.button(subpage4, help="Cliquez pour voir le contenu de la page 4"):
+                    st.session_state.selected_page = subpage4
+
 
             # Switch between the sub-pages
-            if sub_option == subpage1:
+            if st.session_state.selected_page == subpage1:
                 # Call your congestion-related function here
                 gird_congestion(df_all, df_queue)
 
-            elif sub_option == subpage2:
+            elif st.session_state.selected_page == subpage2:
                 st.subheader("Pas de données")
                 #point_rendez_vous(df_RH)
                 
 
-            elif sub_option == subpage3:
+            elif st.session_state.selected_page == subpage3:
                 st.subheader("Pas de données")
             
-            elif sub_option == subpage4:
+            elif st.session_state.selected_page == subpage4:
                 col=st.columns((0.25, 4, 0.25), gap='medium')
             
                 with col[1]:
@@ -297,8 +340,13 @@ def show_dashboard_page(username):
                 
                     titre2="Evolution du Temps d'Operation par Agence"
                     f,_,_,_=area_graph(df_all,concern='NomAgence',time='TempOperation',date_to_bin='Date_Fin',seuil=5,title=titre2)
-                    st.plotly_chart(f,use_container_width=True)
-            
+
+
+
+
+
+
+       
     
 
 
@@ -317,15 +365,34 @@ def show_dashboard_page(username):
         page4="***Performance Agent en Nombre de Clients***"
         page5='***Performance Agent en Temps***'
         
-
-
-
-        pages = [page1,page2,page3,page4,page5]
-        # Injecter du CSS personnalisé
-        with open("stylelabels.css") as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-        option=st.radio(label=' ',options=pages,horizontal=True)
+        if "selected_page" not in st.session_state:
+            st.session_state.selected_page = page1 # Par défaut, Page 1 est sélectionnée
         
+        with open("stylebutton.css", "r") as css_file:
+            st.markdown(f"<style>{css_file.read()}</style>", unsafe_allow_html=True)
+        st.markdown('<div class="button-container">', unsafe_allow_html=True)
+        # Créer trois colonnes pour les boutons
+        col1, col2, col3,col4,col5 = st.columns(5)
+
+        with col1:
+            if st.button(page1, help="Affiche les top 10 des opérations avec leur temps moyen.",use_container_width=True):
+                st.session_state.selected_page = page1
+        with col2:
+            if st.button(page2, help="Analyse des agents et des files d'attente.",use_container_width=True):
+                st.session_state.selected_page =page2
+        with col3:
+            if st.button(page3, help="Affiche l'évolution du nombre de clients au fil du temps.",use_container_width=True):
+                st.session_state.selected_page = page3
+
+        with col4:
+            if st.button(page4, help="Analyse la performance des agents en fonction du nombre de clients.",use_container_width=True):
+                st.session_state.selected_page = page4
+        with col5:
+            if st.button(page5, help="Analyse la performance des agents selon le temps qu'ils prennent pour traiter les clients.",use_container_width=True):
+                st.session_state.selected_page = page5
+
+        
+       
         
         st.markdown("<br><br>", unsafe_allow_html=True)
         
@@ -337,20 +404,20 @@ def show_dashboard_page(username):
             
             
         
-        if option == page1:
+        if st.session_state.selected_page == page1:
             
             c1,c2=st.columns(2)
             plot_and_download(c1,Top10_Type_op(df_selected,df_all),button_key='7')
             plot_and_download(c2,TempsParType_op(df_selected,df_all),button_key='8')
             
-        elif option== page2:
+        elif st.session_state.selected_page== page2:
             col=st.columns((0.25, 4, 0.25), gap='medium')
             with col[1]:
                 fig=stacked_chart(df_selected,'TempOperation','UserName',"Catégorisation du Temps d'opération")
                 st.altair_chart(fig,use_container_width=True)    
                 fig1=stacked_agent(df_selected,type='UserName',concern='Type_Operation')
                 st.altair_chart(fig1,use_container_width=True)
-        elif option == page3:
+        elif st.session_state.selected_page == page3:
             
             col=st.columns((0.25, 4, 0.25), gap='medium')
             
@@ -358,14 +425,14 @@ def show_dashboard_page(username):
             
             
         
-        elif option == page4:
+        elif st.session_state.selected_page == page4:
             pie=Graphs_pie(df_selected)
             c4, c5,c6= st.columns([30,30,30])
             plot_and_download(c4,pie[0],button_key='p1')
             plot_and_download(c5,pie[1],button_key='p2')
             plot_and_download(c6,pie[2],button_key='p3')
 
-        elif option == page5:
+        elif st.session_state.selected_page == page5:
             figs=Graphs_bar(df_selected)
             # Afficher les graphiques dans des colonnes
             c1, c2, c3 = st.columns([30,30,30])
@@ -464,6 +531,7 @@ def show_dashboard_page(username):
                     menu_icon="cast",
                     default_index=0
                 )
+                
             # Réinitialiser la page courante si l'option change
             if st.session_state['selected_option'] != selected:
                 st.session_state['selected_option'] = selected

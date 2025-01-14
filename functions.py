@@ -862,12 +862,13 @@ def Conjection(df_all,df_queue):
     ))
     if queue_length > max_length:
         fig.update_traces(number={'valueformat': "d", 'font': {'size': 12}, 'suffix': display_value})
+    
     fig.update_layout(
         autosize=True,
         height=280,
         margin=dict(l=30, r=30, t=30, b=20),plot_bgcolor='rgba(0,0,0,0)',paper_bgcolor="#2E2E2E",
     xaxis_title='Client(s) en Attente',  # Ajouter le titre de l'axe des X
-    # xaxis_title_font=dict(size=16, color='white'),  # Définir la taille et la couleur de la police
+    # xaxis_title_font=dict(size=5, color='white'),  # Définir la taille et la couleur de la police
      )
     
     

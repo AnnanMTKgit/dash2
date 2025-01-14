@@ -1,0 +1,66 @@
+/* Conteneur pour les boutons */
+.button-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Colonnes adaptatives */
+    gap: 12px; /* Espacement entre les boutons */
+    width: 100%; /* Largeur totale */
+    
+}
+
+/* Bouton stylisé */
+.stButton button {
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #2E2E2E; /* Fond gris */
+    color: white; /* Texte blanc */
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    word-wrap: break-word; /* Permet au texte de revenir à la ligne si nécessaire */
+    border-radius: 8px;
+    padding: 12px; /* Espacement interne */
+    cursor: pointer;
+    height: 100%; /* Hauteur dynamique */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Animation fluide */
+}
+
+/* Bouton au survol */
+.stButton button:hover {
+    background-color: #6c6c6c; /* Fond plus sombre */
+    transform: scale(1.05); /* Zoom léger */
+}
+
+/* Bouton actif */
+.stButton button:active {
+    background-color: #555555; /* Couleur sombre au clic */
+}
+
+/* Style responsive */
+@media (max-width: 768px) {
+    /* Passer à une seule colonne pour les petits écrans */
+    .button-container {
+        grid-template-columns: 1fr; /* Une seule colonne pour les petits écrans */
+        gap: 8px; /* Réduire l'écart entre les boutons pour les petits écrans */
+    }
+
+    /* Pour chaque bouton, ajuster les propriétés sur les petits écrans */
+    .button-container button {
+        font-size: 12px; /* Réduire la taille de la police */
+        padding: 8px; /* Réduire le padding pour plus de compacité */
+        height: auto; /* Hauteur automatique pour s'adapter à la taille du texte */
+    }
+}
+
+@media (max-width: 480px) {
+    /* Pour les écrans encore plus petits (ex. téléphones mobiles) */
+    .button-container {
+        grid-template-columns: 1fr; /* Une seule colonne sur les très petits écrans */
+    }
+
+    .button-container button {
+        font-size: 10px; /* Réduire davantage la taille de la police */
+        padding: 6px; /* Réduire encore le padding */
+    }
+}
