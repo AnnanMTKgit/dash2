@@ -1116,6 +1116,14 @@ def create_excel_buffer(df, sheet_name="Sheet1"):
 def HomeGlob(df_all,df_queue):
     agg,AGG=AgenceTable(df_all,df_queue)
     #with st.expander("Agences"):
+    st.markdown("""
+                <style>
+                .stMultiSelect > div {
+                    max-height: 120px;
+                    overflow-y: auto;
+                }
+                </style>
+            """, unsafe_allow_html=True)
     selected_agency=st.multiselect('Agences: ',agg["Nom d'Agence"].unique(),default=agg["Nom d'Agence"].unique())
     agg=agg[agg["Nom d'Agence"].isin(selected_agency)]
     AGG=AGG[AGG["Nom d'Agence"].isin(selected_agency)]

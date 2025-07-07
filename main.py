@@ -552,7 +552,15 @@ div[data-baseweb="radio"] input:checked + div {
             #     st.experimental_rerun()
             
         else:
-            
+            # Appliquer un style CSS pour restreindre la hauteur
+            st.sidebar.markdown("""
+                <style>
+                .stMultiSelect > div {
+                    max-height: 120px;
+                    overflow-y: auto;
+                }
+                </style>
+            """, unsafe_allow_html=True)
             if profil in ['Administrateur','SuperAdmin']:
                
                 
