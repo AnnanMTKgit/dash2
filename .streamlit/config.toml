@@ -8,7 +8,7 @@ font = "sans serif"            # Police épurée (Segoe UI, Helvetica...)
 [server]
 headless = true
 enableCORS = false
-port = 8501
+
 
 [client]
 showSidebarNavigation = true
