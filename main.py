@@ -345,7 +345,7 @@ div[data-baseweb="radio"] input:checked + div {
             b1,b2,b3= st.columns(3)
             b1.metric("Temps Moyen d'Operation (MIN)", TMO)
             b2.metric("Temps Moyen d'Attente (MIN)",TMA)
-            b3.metric('Total Tickets',NMC)
+            b3.metric('Nombre Moyen de Clients',NMC)
             Conjection(df_all,df_queue)
 
         elif option ==page2:
