@@ -60,11 +60,11 @@ def show_dashboard_page(username):
     st.markdown("""
 <style>
 /* ========== FOND GLOBAL DE L'APPLICATION ========== */
-.stApp {
-    background-color: #FAFAFA;  /* Fond clair principal */
-    color: #212121;             /* Couleur du texte principal */
-    font-family: "Segoe UI", sans-serif; /* Police moderne */
-}
+# .stApp {
+#     background-color: #E2DFDF;  /* Fond clair principal */
+#     color: black;             /* Couleur du texte principal */
+#     font-family: "Segoe UI", sans-serif; /* Police moderne */
+# }
 
 /* ========== SIDEBAR ========== */
 section[data-testid="stSidebar"] {

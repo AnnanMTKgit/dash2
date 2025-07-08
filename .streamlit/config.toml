@@ -1,7 +1,7 @@
 [theme]
 primaryColor = "#1976D2"       # Bleu moderne (titres, boutons)
-backgroundColor = "#FAFAFA"    # Fond principal clair
-secondaryBackgroundColor = "#E3F2FD"  # Fond de la sidebar
+backgroundColor = "#CECBCB"    # Fond principal clair
+secondaryBackgroundColor = "#56B0FB"  # Fond de la sidebar
 textColor = "#212121"          # Texte principal foncé
 font = "sans serif"            # Police épurée (Segoe UI, Helvetica...)
 
