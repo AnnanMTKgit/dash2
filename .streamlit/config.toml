@@ -5,10 +5,10 @@ secondaryBackgroundColor = "#E3F2FD"  # Fond de la sidebar
 textColor = "#212121"          # Texte principal foncé
 font = "sans serif"            # Police épurée (Segoe UI, Helvetica...)
 
-[server]
-headless = true
-enableCORS = false
+#[server]
+#headless = true
+#enableCORS = false
 
 
-[client]
-showSidebarNavigation = true
+#[client]
+#showSidebarNavigation = true
