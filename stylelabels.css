@@ -2,7 +2,7 @@
 div[role='radiogroup'] {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Colonnes flexibles */
-    gap: 0px;
+    gap: 20px;
     width: 100%;
     /* margin-top: 0px; */ */
 }
