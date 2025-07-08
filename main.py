@@ -332,9 +332,46 @@ div[data-baseweb="radio"] input:checked + div {
         pages = [page1,page2,page3,page4,page5 ,page6,page7]
         with open("stylelabels.css") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-        option=st.radio(label=' ',options=pages,horizontal=True,label_visibility="hidden")
-        
-        st.markdown("<br><br>", unsafe_allow_html=True)
+
+        # Appliquer du CSS pour fixer les options radio en haut
+        st.markdown("""
+            <style>
+            .radio-container {
+                position: fixed;
+                top: 0px;  /* Ajuste selon la hauteur de ton header */
+                left: 0;
+                width: 100%;
+                background-color: #0D4C4A;
+                padding: 10px 20px;
+                z-index: 9999;
+                box-shadow: 0px 2px 10px rgba(0,0,0,0.2);
+            }
+
+            .radio-container .stRadio > div {
+                flex-direction: row !important;
+                justify-content: center;
+                margin-bottom: -10px;  /* Réduit encore l’espace sous les boutons */
+            
+                    
+            }
+            .block-container {
+        padding-top: 0px !important; /* Décale le contenu vers le bas */
+    }
+            </style>
+        """, unsafe_allow_html=True)
+
+        # Conteneur HTML personnalisé pour le radio
+        with st.container():
+            st.markdown('<div class="radio-container">', unsafe_allow_html=True)
+            option=st.radio(label=' ',options=pages,horizontal=True,label_visibility="hidden")
+            # selected = st.radio("Choisissez une option :", 
+            #                     ["Accueil", "Statistiques", "Rapports", "Paramètres", "Aide"],
+            #                     label_visibility="collapsed",
+            #                     horizontal=True)
+            # st.markdown('</div>', unsafe_allow_html=True)
+
+        # Espace pour éviter que le contenu ne soit caché sous le bloc fixe
+        # st.markdown("<br><br>", unsafe_allow_html=True)
 
         # Afficher le contenu en fonction de la sélection
         if option == page1:
@@ -553,21 +590,21 @@ div[data-baseweb="radio"] input:checked + div {
             
         else:
             # Appliquer un style CSS pour restreindre la hauteur
-            st.sidebar.markdown("""
-                <style>
-                .stMultiSelect > div {
-                    max-height: 120px;
-                    overflow-y: auto;
-                }
-                </style>
-            """, unsafe_allow_html=True)
+            # st.sidebar.markdown("""
+            #     <style>
+            #     .stMultiSelect > div {
+            #         max-height: 120px;
+            #         overflow-y: auto;
+            #     }
+            #     </style>
+            # """, unsafe_allow_html=True)
             if profil in ['Administrateur','SuperAdmin']:
                
                 
                 NomAgence=st.sidebar.multiselect(
                     'Agences',
                     options=df_agences['NomAgence'].unique(),
-                    default=df_agences['NomAgence'].unique()
+                    default=df_agences['NomAgence'].unique()[0]
                 )
                 df=df.query('NomAgence==@NomAgence')
                 
@@ -653,7 +690,7 @@ div[data-baseweb="radio"] input:checked + div {
         padding: 10px 0;
         text-align: center;
         font-size: 0.9rem;
-        color: white;
+        color: #2E2E2E;
         background-color: transparent;
     }
 
