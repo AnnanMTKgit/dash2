@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import warnings
+from streamlit_folium import st_folium 
 warnings.filterwarnings('ignore')
 from streamlit_option_menu import option_menu
 import time
@@ -582,7 +583,7 @@ def current_attente(df_queue,agence,HeureFermeture=None):
 
 
 
-
+@st.cache_data
 def create_folium_map(agg):
     legend_html = ''  # Variable pour stocker la légende HTML
     
@@ -591,19 +592,32 @@ def create_folium_map(agg):
     # Définition des couleurs uniques par NomAgence
     agences = list(df["NomAgence"].unique())
     couleurs = [
-    "Teal Green", "Orange", "Red Orange", "Burnt Orange", "Lime Green",
-    "Royal Blue", "Hot Pink", "Turquoise", "Deep Orange", "Spring Green",
-    "Purple", "Raspberry Pink", "Azure Blue", "Amber", "Aquamarine",
-    "Lime", "Deep Pink", "Mint Green", "Vivid Violet", "Watermelon Red",
-    "Sky Blue", "Gold", "Seafoam Green", "Electric Purple", "Fuchsia",
-    "Light Green", "Neon Blue", "Magenta"
-]
+        'blue', 'green', 'purple', 'orange', 'darkred', 'red',
+        'cadetblue', 'darkpurple', 'pink', 'lightblue', 'lightgreen', 
+        'gray', 'black', 'darkblue'
+    ]
 
-    agence_couleur = {agence: couleurs[agences.index(agence)] for agence in agences }
+    agence_couleur = {
+        agence: couleurs[i % len(couleurs)] 
+        for i, agence in enumerate(agences)
+    }
+    # 4. Déterminer la vue initiale de la carte
+    if df.empty or df["Latitude"].isnull().all() or df["Longitude"].isnull().all():
+        map_location = [14.4974, -14.4524] # Centre du Sénégal
+        map_zoom = 6
+    else:
+        map_location = [df["Latitude"].mean(), df["Longitude"].mean()]
+        map_zoom = 7
 
-    # Initialiser la carte centrée sur la moyenne des coordonnées
-    m = folium.Map(location=[df["Latitude"].mean(), df["Longitude"].mean()], zoom_start=7, control_scale=True, prefer_canvas=True)
-
+    # 5. Créer l'objet carte en utilisant la position sauvegardée si elle existe
+    m = folium.Map(
+        location= map_location,
+        zoom_start= map_zoom,
+        control_scale=True,
+        prefer_canvas=True,
+        width="100%",
+        height="100%"
+    )
     # Générer des polygones et marqueurs par ville
     for ville, group in df.groupby("Region"):
         min_lat, max_lat = group["Latitude"].min(), group["Latitude"].max()
@@ -927,63 +941,38 @@ def Conjection(df_all,df_queue):
     _,agg= AgenceTable(df_all,df_queue)
     agg=agg.rename(columns={"Nom d'Agence":'NomAgence','Capacité':'Capacites',"Temps Moyen d'Operation (MIN)":'Temps_Moyen_Operation',"Temps Moyen d'Attente (MIN)":'Temps_Moyen_Attente','Total Traités':'NombreTraites','Total Tickets':'NombreTickets','Nbs de Clients en Attente':'AttenteActuel'})
     # legend_html, deck =create_map(agg)
-    NomAgence = c1.selectbox(
-        'CONGESTION PAR AGENCE:',
+    with c1:
+        st.subheader("CONGESTION PAR AGENCE")
+        NomAgence = c1.selectbox(
+        label="",
         options=df_queue['NomAgence'].unique(),
         index=0,
+        label_visibility="collapsed",
         key='2'
     )
     
     
-    # HeureF=df['HeureFermeture'].unique()[0]
-    df=agg[agg['NomAgence']==NomAgence]
-    with c2:
+        # HeureF=df['HeureFermeture'].unique()[0]
+        df=agg[agg['NomAgence']==NomAgence]
+        HeureFermeture=df_queue['HeureFermeture'].iloc[0]
+        queue_length=current_attente(df_queue,NomAgence,HeureFermeture)
+        nomService=list(df_queue['NomService'].unique())
+        queue_length_service={f'{i}':f"{current_attente(df_queue[df_queue['NomService']==i],NomAgence,HeureFermeture)}" for i in nomService}
+        # Convert the dictionary to a dataframe
+        df_queue_length_service = pd.DataFrame.from_dict(queue_length_service, orient='index', columns=['Client en Attente'])
+
+        # Reset index to make the keys a column if needed
+        df_queue_length_service.reset_index(inplace=True)
+        df_queue_length_service.rename(columns={'index': 'Service'}, inplace=True)
+
         
-        folium_map = create_folium_map(agg)
-        folium_map.save('map.html')
-        #@st.cache_data()
-        def get_golden_map():
-            HtmlFile = open("map.html", 'r', encoding='utf-8')
-            bcn_map_html = HtmlFile.read()
-            return bcn_map_html
-        bcn_map_html = get_golden_map()
-        with st.container():
-            html(bcn_map_html,width=800, height=508)
         
-            #st.components.v1.html(folium_map._repr_html_(), height=600, width=800)
-            
-        
-    # with c3:
-    #     c3.write('Legend')
-    #     c3.markdown(legend_html, unsafe_allow_html=True)
 
-    HeureFermeture=df_queue['HeureFermeture'].iloc[0]
-    queue_length=current_attente(df_queue,NomAgence,HeureFermeture)
-    nomService=list(df_queue['NomService'].unique())
-    queue_length_service={f'{i}':f"{current_attente(df_queue[df_queue['NomService']==i],NomAgence,HeureFermeture)}" for i in nomService}
-    # Convert the dictionary to a dataframe
-    df_queue_length_service = pd.DataFrame.from_dict(queue_length_service, orient='index', columns=['Client en Attente'])
 
-    # Reset index to make the keys a column if needed
-    df_queue_length_service.reset_index(inplace=True)
-    df_queue_length_service.rename(columns={'index': 'Service'}, inplace=True)
-
+        max_length=df['Capacites'].values[0]
     
-    
-
-
-    max_length=df['Capacites'].values[0]
-  
-    queue_length=df['AttenteActuel'].values[0]
-    
-    
-    with c1:
+        queue_length=df['AttenteActuel'].values[0]
         echarts_satisfaction_gauge(queue_length=queue_length,max_length=max_length)
-        
-     
-    
-    with c1:
-        
         # Load CSS file
         with open("styleblock.css") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -992,6 +981,41 @@ def Conjection(df_all,df_queue):
             Value = queue_length_service[nom]
             Delta = ''
             c[i].metric(label=nom, value=Value, delta=Delta)
+     
+    with c2:
+        
+        
+        folium_map = create_folium_map(agg)
+
+        #map_data = st_folium(folium_map, height=480,zoom=None, use_container_width=True)
+        
+        
+        # (Optionnel) Afficher les données retournées par la carte pour voir l'interactivité
+        
+        folium_map.save('map.html')
+        # #@st.cache_data()
+        def get_golden_map():
+            HtmlFile = open("map.html", 'r', encoding='utf-8')
+            bcn_map_html = HtmlFile.read()
+            return bcn_map_html
+        bcn_map_html = get_golden_map()
+        with st.container():
+            html(bcn_map_html, height=508)
+        
+            #st.components.v1.html(folium_map._repr_html_(), height=600, width=800)
+            
+        
+    # with c3:
+    #     c3.write('Legend')
+    #     c3.markdown(legend_html, unsafe_allow_html=True)
+    
+    
+    
+    
+    
+    # with c1:
+        
+        
     #c1.dataframe(df_queue_length_service,use_container_width=True)
         
         
